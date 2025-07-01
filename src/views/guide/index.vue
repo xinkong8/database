@@ -1,12 +1,10 @@
 <template>
   <div class="app-container">
     <aside>
-      The guide page is useful for some people who entered the project for the first time. You can briefly introduce the
-      features of the project. Demo is based on
-      <a href="https://github.com/kamranahmedse/driver.js" target="_blank">driver.js.</a>
+      欢迎使用个人生活管理助手！本系统主要负责帮助您进行记账、存储电子书以及记录代办事项等事务，您可以点击下方的显示引导查看本系统的主要功能，感谢您的支持！
     </aside>
     <el-button icon="el-icon-question" type="primary" @click.prevent.stop="guide">
-      Show Guide
+      显示引导
     </el-button>
   </div>
 </template>

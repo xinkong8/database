@@ -27,16 +27,25 @@
     </el-row>
 
     <el-row :gutter="8">
-      <el-col :xs="{span: 24}" :sm="{span: 24}" :md="{span: 24}" :lg="{span: 12}" :xl="{span: 12}" style="padding-right:8px;margin-bottom:30px;">
+      <el-col :xs="24" :sm="24" :md="24" :lg="12" :xl="12" style="padding-right:8px;margin-bottom:30px;">
         <transaction-table />
       </el-col>
-      <el-col :xs="{span: 24}" :sm="{span: 12}" :md="{span: 12}" :lg="{span: 6}" :xl="{span: 6}" style="margin-bottom:30px;">
+      <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6" style="margin-bottom:30px;">
         <todo-list />
       </el-col>
-      <el-col :xs="{span: 24}" :sm="{span: 12}" :md="{span: 12}" :lg="{span: 6}" :xl="{span: 6}" style="margin-bottom:30px;">
+      <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6" style="margin-bottom:30px;">
         <box-card />
       </el-col>
     </el-row>
+
+    <el-dialog :visible.sync="showGuideDialog" title="新手引导" width="600px" :close-on-click-modal="false">
+      <aside>
+        欢迎使用个人生活管理助手！本系统主要负责帮助您进行记账、存储电子书以及记录代办事项等事务，您可以点击下方的显示引导查看本系统的主要功能，感谢您的支持！
+      </aside>
+      <el-button icon="el-icon-question" type="primary" @click.prevent.stop="guide">
+        显示引导
+      </el-button>
+    </el-dialog>
   </div>
 </template>
 
@@ -50,6 +59,9 @@ import BarChart from './components/BarChart'
 import TransactionTable from './components/TransactionTable'
 import TodoList from './components/TodoList'
 import BoxCard from './components/BoxCard'
+import Driver from 'driver.js'
+import 'driver.js/dist/driver.min.css'
+import steps from '@/views/guide/steps'
 
 const lineChartData = {
   newVisitis: {
@@ -85,12 +97,21 @@ export default {
   },
   data() {
     return {
-      lineChartData: lineChartData.newVisitis
+      lineChartData: lineChartData.newVisitis,
+      showGuideDialog: true,
+      driver: null
     }
+  },
+  mounted() {
+    this.driver = new Driver()
   },
   methods: {
     handleSetLineChartData(type) {
       this.lineChartData = lineChartData[type]
+    },
+    guide() {
+      this.driver.defineSteps(steps)
+      this.driver.start()
     }
   }
 }
