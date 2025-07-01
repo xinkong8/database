@@ -2,7 +2,7 @@
   <section class="todoapp">
     <!-- header -->
     <header class="header">
-      <input class="new-todo" autocomplete="off" placeholder="Todo List" @keyup.enter="addTodo">
+      <input class="new-todo" autocomplete="off" placeholder="待办事项" @keyup.enter="addTodo">
     </header>
     <!-- main section -->
     <section v-show="todos.length" class="main">
@@ -23,7 +23,7 @@
     <footer v-show="todos.length" class="footer">
       <span class="todo-count">
         <strong>{{ remaining }}</strong>
-        {{ remaining | pluralize('item') }} left
+        {{ remaining | pluralize('项') }} 剩余
       </span>
       <ul class="filters">
         <li v-for="(val, key) in filters" :key="key">
@@ -31,7 +31,7 @@
         </li>
       </ul>
       <!-- <button class="clear-completed" v-show="todos.length > remaining" @click="clearCompleted">
-        Clear completed
+        清除已完成
       </button> -->
     </footer>
   </section>
@@ -47,14 +47,14 @@ const filters = {
   completed: todos => todos.filter(todo => todo.done)
 }
 const defalutList = [
-  { text: 'star this repository', done: false },
-  { text: 'fork this repository', done: false },
-  { text: 'follow author', done: false },
-  { text: 'vue-element-admin', done: true },
-  { text: 'vue', done: true },
-  { text: 'element-ui', done: true },
-  { text: 'axios', done: true },
-  { text: 'webpack', done: true }
+  { text: '开始使用个人生活管理助手', done: false },
+  { text: '添加第一个待办事项', done: false },
+  { text: '设置个人目标', done: false },
+  { text: '查看仪表板', done: true },
+  { text: '学习使用功能', done: true },
+  { text: '个性化设置', done: true },
+  { text: '数据统计', done: true },
+  { text: '系统配置', done: true }
 ]
 export default {
   components: { Todo },

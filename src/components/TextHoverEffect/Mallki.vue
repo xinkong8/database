@@ -15,7 +15,7 @@ export default {
     },
     text: {
       type: String,
-      default: 'vue-element-admin'
+      default: '个人生活管理助手'
     }
   }
 }

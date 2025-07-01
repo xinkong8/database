@@ -1,8 +1,12 @@
 <template>
   <div class="components-container">
-    <aside>
-      Rich text is a core feature of the management backend, but at the same time it is a place with lots of pits. In the process of selecting rich texts, I also took a lot of detours. The common rich texts on the market have been basically used, and I finally chose Tinymce. See the more detailed rich text comparison and introduction.
-      <a target="_blank" class="link-type" href="https://panjiachen.github.io/vue-element-admin-site/feature/component/rich-editor.html">Documentation</a>
+    <aside>富文本编辑器基于
+      <a href="https://github.com/tinymce/tinymce" target="_blank">TinyMCE</a>，简单地用Vue包装。
+      <a
+        target="_blank"
+        href="https://panjiachen.github.io/vue-element-admin-site/feature/component/tinymce.html"
+      >
+        文档 </a>
     </aside>
     <div>
       <tinymce v-model="content" :height="300" />
@@ -20,8 +24,8 @@ export default {
   data() {
     return {
       content:
-      `<h1 style="text-align: center;">Welcome to the TinyMCE demo!</h1><p style="text-align: center; font-size: 15px;"><img title="TinyMCE Logo" src="//www.tinymce.com/images/glyph-tinymce@2x.png" alt="TinyMCE Logo" width="110" height="97" /><ul>
-        <li>Our <a href="//www.tinymce.com/docs/">documentation</a> is a great resource for learning how to configure TinyMCE.</li><li>Have a specific question? Visit the <a href="https://community.tinymce.com/forum/">Community Forum</a>.</li><li>We also offer enterprise grade support as part of <a href="https://tinymce.com/pricing">TinyMCE premium subscriptions</a>.</li>
+      `<h1 style="text-align: center;">欢迎使用个人生活管理助手！</h1><p style="text-align: center; font-size: 15px;"><img title="TinyMCE Logo" src="//www.tinymce.com/images/glyph-tinymce@2x.png" alt="TinyMCE Logo" width="110" height="97" /><ul>
+        <li>这是一个功能强大的个人生活管理工具。</li><li>帮助您更好地管理日常事务。</li><li>提供丰富的功能组件和个性化设置。</li>
       </ul>`
     }
   }

@@ -1,8 +1,8 @@
 <template>
   <div class="components-container board">
-    <Kanban :key="1" :list="list1" :group="group" class="kanban todo" header-text="Todo" />
-    <Kanban :key="2" :list="list2" :group="group" class="kanban working" header-text="Working" />
-    <Kanban :key="3" :list="list3" :group="group" class="kanban done" header-text="Done" />
+    <Kanban :key="1" :list="list1" :group="group" class="kanban todo" header-text="待办" />
+    <Kanban :key="2" :list="list2" :group="group" class="kanban working" header-text="进行中" />
+    <Kanban :key="3" :list="list3" :group="group" class="kanban done" header-text="已完成" />
   </div>
 </template>
 <script>
@@ -17,20 +17,20 @@ export default {
     return {
       group: 'mission',
       list1: [
-        { name: 'Mission', id: 1 },
-        { name: 'Mission', id: 2 },
-        { name: 'Mission', id: 3 },
-        { name: 'Mission', id: 4 }
+        { name: '任务', id: 1 },
+        { name: '任务', id: 2 },
+        { name: '任务', id: 3 },
+        { name: '任务', id: 4 }
       ],
       list2: [
-        { name: 'Mission', id: 5 },
-        { name: 'Mission', id: 6 },
-        { name: 'Mission', id: 7 }
+        { name: '任务', id: 5 },
+        { name: '任务', id: 6 },
+        { name: '任务', id: 7 }
       ],
       list3: [
-        { name: 'Mission', id: 8 },
-        { name: 'Mission', id: 9 },
-        { name: 'Mission', id: 10 }
+        { name: '任务', id: 8 },
+        { name: '任务', id: 9 },
+        { name: '任务', id: 10 }
       ]
     }
   }

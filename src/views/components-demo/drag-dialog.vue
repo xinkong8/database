@@ -1,16 +1,16 @@
 <template>
   <div class="components-container">
     <el-button type="primary" @click="dialogTableVisible = true">
-      open a Drag Dialog
+      打开拖拽对话框
     </el-button>
-    <el-dialog v-el-drag-dialog :visible.sync="dialogTableVisible" title="Shipping address" @dragDialog="handleDrag">
+    <el-dialog v-el-drag-dialog :visible.sync="dialogTableVisible" title="收货地址" @dragDialog="handleDrag">
       <el-select ref="select" v-model="value" placeholder="请选择">
         <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />
       </el-select>
       <el-table :data="gridData">
-        <el-table-column property="date" label="Date" width="150" />
-        <el-table-column property="name" label="Name" width="200" />
-        <el-table-column property="address" label="Address" />
+        <el-table-column property="date" label="日期" width="150" />
+        <el-table-column property="name" label="姓名" width="200" />
+        <el-table-column property="address" label="地址" />
       </el-table>
     </el-dialog>
   </div>
@@ -34,25 +34,25 @@ export default {
       value: '',
       gridData: [{
         date: '2016-05-02',
-        name: 'John Smith',
-        address: 'No.1518,  Jinshajiang Road, Putuo District'
+        name: '张三',
+        address: '普陀区金沙江路 1518 号'
       }, {
         date: '2016-05-04',
-        name: 'John Smith',
-        address: 'No.1518,  Jinshajiang Road, Putuo District'
+        name: '李四',
+        address: '普陀区金沙江路 1518 号'
       }, {
         date: '2016-05-01',
-        name: 'John Smith',
-        address: 'No.1518,  Jinshajiang Road, Putuo District'
+        name: '王五',
+        address: '普陀区金沙江路 1518 号'
       }, {
         date: '2016-05-03',
-        name: 'John Smith',
-        address: 'No.1518,  Jinshajiang Road, Putuo District'
+        name: '赵六',
+        address: '普陀区金沙江路 1518 号'
       }]
     }
   },
   methods: {
-    // v-el-drag-dialog onDrag callback function
+    // v-el-drag-dialog 拖拽回调函数
     handleDrag() {
       this.$refs.select.blur()
     }

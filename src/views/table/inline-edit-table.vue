@@ -121,7 +121,7 @@ export default {
       row.title = row.originalTitle
       row.edit = false
       this.$message({
-        message: 'The title has been restored to the original value',
+        message: '标题已恢复到原始值',
         type: 'warning'
       })
     },
@@ -129,7 +129,7 @@ export default {
       row.edit = false
       row.originalTitle = row.title
       this.$message({
-        message: 'The title has been edited',
+        message: '标题已编辑',
         type: 'success'
       })
     }

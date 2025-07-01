@@ -90,7 +90,7 @@
             <span>hover text</span>
           </div>
           <div class="component-item">
-            <mallki class-name="mallki-text" text="vue-element-admin" />
+            <mallki class-name="mallki-text" text="个人生活管理助手" />
           </div>
         </el-card>
       </el-col>
@@ -100,9 +100,12 @@
       <el-col :span="8">
         <el-card class="box-card">
           <div slot="header" class="clearfix">
-            <span>Share</span>
+            <span>分享</span>
           </div>
           <div class="component-item" style="height:420px;">
+            <el-tag class="tag-title">
+              基础:
+            </el-tag>
             <dropdown-menu :items="articleList" style="margin:0 auto;" title="系列文章" />
           </div>
         </el-card>

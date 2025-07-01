@@ -1,10 +1,10 @@
 <template>
   <div class="components-container">
-    <aside>drag-list base on
+    <aside>拖拽列表基于
       <a href="https://github.com/SortableJS/Vue.Draggable" target="_blank">Vue.Draggable</a>
     </aside>
     <div class="editor-container">
-      <dnd-list :list1="list1" :list2="list2" list1-title="List" list2-title="Article pool" />
+      <dnd-list :list1="list1" :list2="list2" list1-title="列表" list2-title="文章池" />
     </div>
   </div>
 </template>
