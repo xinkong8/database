@@ -1,54 +1,58 @@
 <template>
   <el-row :gutter="40" class="panel-group">
     <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
-      <div class="card-panel" @click="handleSetLineChartData('newVisitis')">
-        <div class="card-panel-icon-wrapper icon-people">
-          <svg-icon icon-class="peoples" class-name="card-panel-icon" />
+      <div class="card-panel" @click="handleSetChartData('tasks')">
+        <div class="card-panel-icon-wrapper icon-tasks">
+          <svg-icon icon-class="list" class-name="card-panel-icon" />
         </div>
         <div class="card-panel-description">
           <div class="card-panel-text">
-            新访问
+            待办任务
           </div>
-          <count-to :start-val="0" :end-val="102400" :duration="2600" class="card-panel-num" />
+          <count-to :start-val="0" :end-val="12" :duration="2000" class="card-panel-num" />
+          <div class="card-panel-unit">项</div>
         </div>
       </div>
     </el-col>
     <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
-      <div class="card-panel" @click="handleSetLineChartData('messages')">
-        <div class="card-panel-icon-wrapper icon-message">
-          <svg-icon icon-class="message" class-name="card-panel-icon" />
-        </div>
-        <div class="card-panel-description">
-          <div class="card-panel-text">
-            消息
-          </div>
-          <count-to :start-val="0" :end-val="81212" :duration="3000" class="card-panel-num" />
-        </div>
-      </div>
-    </el-col>
-    <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
-      <div class="card-panel" @click="handleSetLineChartData('purchases')">
-        <div class="card-panel-icon-wrapper icon-money">
+      <div class="card-panel" @click="handleSetChartData('finance')">
+        <div class="card-panel-icon-wrapper icon-finance">
           <svg-icon icon-class="money" class-name="card-panel-icon" />
         </div>
         <div class="card-panel-description">
           <div class="card-panel-text">
-            购买
+            本月支出
           </div>
-          <count-to :start-val="0" :end-val="9280" :duration="3200" class="card-panel-num" />
+          <count-to :start-val="0" :end-val="3150" :duration="2500" class="card-panel-num" />
+          <div class="card-panel-unit">元</div>
         </div>
       </div>
     </el-col>
     <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
-      <div class="card-panel" @click="handleSetLineChartData('shoppings')">
-        <div class="card-panel-icon-wrapper icon-shopping">
-          <svg-icon icon-class="shopping" class-name="card-panel-icon" />
+      <div class="card-panel" @click="handleSetChartData('health')">
+        <div class="card-panel-icon-wrapper icon-health">
+          <svg-icon icon-class="star" class-name="card-panel-icon" />
         </div>
         <div class="card-panel-description">
           <div class="card-panel-text">
-            购物
+            今日步数
           </div>
-          <count-to :start-val="0" :end-val="13600" :duration="3600" class="card-panel-num" />
+          <count-to :start-val="0" :end-val="8300" :duration="3000" class="card-panel-num" />
+          <div class="card-panel-unit">步</div>
+        </div>
+      </div>
+    </el-col>
+    <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
+      <div class="card-panel" @click="handleSetChartData('habits')">
+        <div class="card-panel-icon-wrapper icon-habits">
+          <svg-icon icon-class="chart" class-name="card-panel-icon" />
+        </div>
+        <div class="card-panel-description">
+          <div class="card-panel-text">
+            习惯完成
+          </div>
+          <count-to :start-val="0" :end-val="5" :duration="2000" class="card-panel-num" />
+          <div class="card-panel-unit">/ 7</div>
         </div>
       </div>
     </el-col>
@@ -59,12 +63,13 @@
 import CountTo from 'vue-count-to'
 
 export default {
+  name: 'LifeDataPanel',
   components: {
     CountTo
   },
   methods: {
-    handleSetLineChartData(type) {
-      this.$emit('handleSetLineChartData', type)
+    handleSetChartData(type) {
+      this.$emit('handleSetChartData', type)
     }
   }
 }
@@ -94,37 +99,37 @@ export default {
         color: #fff;
       }
 
-      .icon-people {
-        background: #40c9c6;
+      .icon-tasks {
+        background: #1abc9c;
       }
 
-      .icon-message {
-        background: #36a3f7;
+      .icon-finance {
+        background: #f39c12;
       }
 
-      .icon-money {
-        background: #f4516c;
+      .icon-health {
+        background: #e74c3c;
       }
 
-      .icon-shopping {
-        background: #34bfa3
+      .icon-habits {
+        background: #9b59b6;
       }
     }
 
-    .icon-people {
-      color: #40c9c6;
+    .icon-tasks {
+      color: #1abc9c;
     }
 
-    .icon-message {
-      color: #36a3f7;
+    .icon-finance {
+      color: #f39c12;
     }
 
-    .icon-money {
-      color: #f4516c;
+    .icon-health {
+      color: #e74c3c;
     }
 
-    .icon-shopping {
-      color: #34bfa3
+    .icon-habits {
+      color: #9b59b6;
     }
 
     .card-panel-icon-wrapper {
@@ -155,6 +160,14 @@ export default {
 
       .card-panel-num {
         font-size: 20px;
+        display: inline-block;
+      }
+
+      .card-panel-unit {
+        font-size: 14px;
+        color: rgba(0, 0, 0, 0.6);
+        display: inline-block;
+        margin-left: 4px;
       }
     }
   }

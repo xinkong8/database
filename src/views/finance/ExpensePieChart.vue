@@ -5,7 +5,7 @@
 <script>
 import echarts from 'echarts'
 require('echarts/theme/macarons') // echarts theme
-import resize from '@/views/dashboard/admin/components/mixins/resize'
+import resize from '@/views/dashboard/life-overview/components/mixins/resize'
 
 export default {
   name: 'ExpensePieChart',
