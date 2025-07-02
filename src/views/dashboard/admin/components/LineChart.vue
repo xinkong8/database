@@ -61,15 +61,24 @@ export default {
       this.chart = echarts.init(this.$el, 'macarons')
       this.setOptions(this.chartData)
     },
-    setOptions({ expectedData, actualData } = {}) {
+    setOptions({ expectedData, actualData, weeks } = {}) {
       this.chart.setOption({
         xAxis: {
-          data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+          data: weeks || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
           boundaryGap: false,
           axisTick: {
             show: false
           }
         },
+        dataZoom: [
+          {
+            type: 'slider',
+            show: true,
+            xAxisIndex: 0,
+            start: weeks && weeks.length > 14 ? 100 - (14 / weeks.length) * 100 : 0,
+            end: 100
+          }
+        ],
         grid: {
           left: 10,
           right: 10,
@@ -90,10 +99,10 @@ export default {
           }
         },
         legend: {
-          data: ['expected', 'actual']
+          data: ['收入', '支出']
         },
         series: [{
-          name: 'expected', itemStyle: {
+          name: '收入', itemStyle: {
             normal: {
               color: '#FF005A',
               lineStyle: {
@@ -109,7 +118,7 @@ export default {
           animationEasing: 'cubicInOut'
         },
         {
-          name: 'actual',
+          name: '支出',
           smooth: true,
           type: 'line',
           itemStyle: {
