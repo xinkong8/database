@@ -1,54 +1,57 @@
 <template>
   <el-row :gutter="40" class="panel-group">
     <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
-      <div class="card-panel" @click="handleSetLineChartData('newVisitis')">
-        <div class="card-panel-icon-wrapper icon-people">
-          <svg-icon icon-class="peoples" class-name="card-panel-icon" />
-        </div>
-        <div class="card-panel-description">
-          <div class="card-panel-text">
-            新访问
-          </div>
-          <count-to :start-val="0" :end-val="102400" :duration="2600" class="card-panel-num" />
-        </div>
-      </div>
-    </el-col>
-    <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
-      <div class="card-panel" @click="handleSetLineChartData('messages')">
-        <div class="card-panel-icon-wrapper icon-message">
-          <svg-icon icon-class="message" class-name="card-panel-icon" />
-        </div>
-        <div class="card-panel-description">
-          <div class="card-panel-text">
-            消息
-          </div>
-          <count-to :start-val="0" :end-val="81212" :duration="3000" class="card-panel-num" />
-        </div>
-      </div>
-    </el-col>
-    <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
-      <div class="card-panel" @click="handleSetLineChartData('purchases')">
+      <div class="card-panel" @click="handleSetLineChartData('finance')">
         <div class="card-panel-icon-wrapper icon-money">
           <svg-icon icon-class="money" class-name="card-panel-icon" />
         </div>
         <div class="card-panel-description">
           <div class="card-panel-text">
-            购买
+            本月结余
           </div>
-          <count-to :start-val="0" :end-val="9280" :duration="3200" class="card-panel-num" />
+          <count-to :start-val="0" :end-val="monthBalance" :duration="2600" class="card-panel-num" />
         </div>
       </div>
     </el-col>
+
     <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
-      <div class="card-panel" @click="handleSetLineChartData('shoppings')">
-        <div class="card-panel-icon-wrapper icon-shopping">
-          <svg-icon icon-class="shopping" class-name="card-panel-icon" />
+      <div class="card-panel" @click="handleSetLineChartData('todos')">
+        <div class="card-panel-icon-wrapper icon-todo">
+          <svg-icon icon-class="list" class-name="card-panel-icon" />
         </div>
         <div class="card-panel-description">
           <div class="card-panel-text">
-            购物
+            待办事项
           </div>
-          <count-to :start-val="0" :end-val="13600" :duration="3600" class="card-panel-num" />
+          <count-to :start-val="0" :end-val="todoCount" :duration="3000" class="card-panel-num" />
+        </div>
+      </div>
+    </el-col>
+
+    <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
+      <div class="card-panel" @click="handleSetLineChartData('goals')">
+        <div class="card-panel-icon-wrapper icon-goal">
+          <svg-icon icon-class="star" class-name="card-panel-icon" />
+        </div>
+        <div class="card-panel-description">
+          <div class="card-panel-text">
+            已完成目标
+          </div>
+          <count-to :start-val="0" :end-val="completedGoals" :duration="3200" class="card-panel-num" />
+        </div>
+      </div>
+    </el-col>
+
+    <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
+      <div class="card-panel" @click="handleSetLineChartData('health')">
+        <div class="card-panel-icon-wrapper icon-health">
+          <svg-icon icon-class="peoples" class-name="card-panel-icon" />
+        </div>
+        <div class="card-panel-description">
+          <div class="card-panel-text">
+            健康指数
+          </div>
+          <count-to :start-val="0" :end-val="healthScore" :duration="3600" class="card-panel-num" />
         </div>
       </div>
     </el-col>
@@ -62,9 +65,55 @@ export default {
   components: {
     CountTo
   },
+  data() {
+    return {
+      monthBalance: 0,
+      todoCount: 0,
+      completedGoals: 0,
+      healthScore: 85
+    }
+  },
+  created() {
+    this.loadLifeData()
+  },
   methods: {
     handleSetLineChartData(type) {
       this.$emit('handleSetLineChartData', type)
+    },
+
+    loadLifeData() {
+      // 加载本月财务数据
+      this.loadFinanceData()
+      // 加载待办事项数据
+      this.loadTodoData()
+      // 加载目标数据
+      this.loadGoalData()
+    },
+
+    loadFinanceData() {
+      const currentMonth = new Date().toISOString().slice(0, 7) // YYYY-MM
+      const incomeList = JSON.parse(localStorage.getItem('incomeList') || '[]')
+      const expenseList = JSON.parse(localStorage.getItem('expenseList') || '[]')
+
+      const monthIncome = incomeList
+        .filter(item => item.date && item.date.startsWith(currentMonth))
+        .reduce((sum, item) => sum + (Number(item.amount) || 0), 0)
+
+      const monthExpense = expenseList
+        .filter(item => item.date && item.date.startsWith(currentMonth))
+        .reduce((sum, item) => sum + (Number(item.amount) || 0), 0)
+
+      this.monthBalance = monthIncome - monthExpense
+    },
+
+    loadTodoData() {
+      const todos = JSON.parse(localStorage.getItem('todos') || '[]')
+      this.todoCount = todos.filter(todo => !todo.done).length
+    },
+
+    loadGoalData() {
+      const goals = JSON.parse(localStorage.getItem('goals') || '[]')
+      this.completedGoals = goals.filter(goal => goal.completed).length
     }
   }
 }
@@ -88,43 +137,44 @@ export default {
     background: #fff;
     box-shadow: 4px 4px 40px rgba(0, 0, 0, .05);
     border-color: rgba(0, 0, 0, .05);
+    border-radius: 8px;
 
     &:hover {
       .card-panel-icon-wrapper {
         color: #fff;
       }
 
-      .icon-people {
-        background: #40c9c6;
-      }
-
-      .icon-message {
-        background: #36a3f7;
-      }
-
       .icon-money {
-        background: #f4516c;
+        background: #67C23A;
       }
 
-      .icon-shopping {
-        background: #34bfa3
+      .icon-todo {
+        background: #409EFF;
       }
-    }
 
-    .icon-people {
-      color: #40c9c6;
-    }
+      .icon-goal {
+        background: #E6A23C;
+      }
 
-    .icon-message {
-      color: #36a3f7;
+      .icon-health {
+        background: #F56C6C;
+      }
     }
 
     .icon-money {
-      color: #f4516c;
+      color: #67C23A;
     }
 
-    .icon-shopping {
-      color: #34bfa3
+    .icon-todo {
+      color: #409EFF;
+    }
+
+    .icon-goal {
+      color: #E6A23C;
+    }
+
+    .icon-health {
+      color: #F56C6C;
     }
 
     .card-panel-icon-wrapper {
