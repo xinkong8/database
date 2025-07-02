@@ -3,30 +3,48 @@ import Layout from '@/layout'
 const financeRouter = {
   path: '/finance',
   component: Layout,
-  redirect: '/finance/income',
+  redirect: '/finance/overview',
   name: 'Finance',
   meta: {
-    title: '记账',
+    title: '财务管理',
     icon: 'money'
   },
   children: [
     {
-      path: 'income',
-      component: () => import('@/views/finance/income'),
-      name: 'Income',
-      meta: { title: '收入' }
+      path: 'overview',
+      component: () => import('@/views/finance/overview'),
+      name: 'FinanceOverview',
+      meta: { title: '财务概览', icon: 'dashboard' }
     },
     {
-      path: 'expense',
-      component: () => import('@/views/finance/expense'),
-      name: 'Expense',
-      meta: { title: '支出' }
+      path: 'record',
+      component: () => import('@/views/finance/record'),
+      name: 'FinanceRecord',
+      meta: { title: '记账', icon: 'edit' }
     },
     {
-      path: 'chart',
-      component: () => import('@/views/finance'),
-      name: 'FinanceChart',
-      meta: { title: '账单' }
+      path: 'records',
+      component: () => import('@/views/finance/records'),
+      name: 'FinanceRecords',
+      meta: { title: '记录管理', icon: 'list' }
+    },
+    {
+      path: 'budget',
+      component: () => import('@/views/finance/budget'),
+      name: 'FinanceBudget',
+      meta: { title: '预算管理', icon: 'money' }
+    },
+    {
+      path: 'statistics',
+      component: () => import('@/views/finance/statistics'),
+      name: 'FinanceStatistics',
+      meta: { title: '统计分析', icon: 'chart' }
+    },
+    {
+      path: 'settings',
+      component: () => import('@/views/finance/settings'),
+      name: 'FinanceSettings',
+      meta: { title: '分类设置', icon: 'setting' }
     }
   ]
 }
