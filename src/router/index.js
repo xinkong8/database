@@ -128,19 +128,6 @@ export const asyncRoutes = [
   healthRouter,
 
   {
-    path: '/tab',
-    component: Layout,
-    children: [
-      {
-        path: 'index',
-        component: () => import('@/views/tab/index'),
-        name: 'Tab',
-        meta: { title: '标签页', icon: 'tab' }
-      }
-    ]
-  },
-
-  {
     path: '/error',
     component: Layout,
     redirect: 'noRedirect',
