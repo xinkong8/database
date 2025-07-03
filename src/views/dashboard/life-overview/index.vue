@@ -41,23 +41,26 @@
 
     <!-- 生活管理区域 -->
     <el-row :gutter="8">
-      <el-col :xs="24" :sm="24" :md="24" :lg="12" :xl="12" style="padding-right:8px;margin-bottom:30px;">
+      <el-col :xs="24" :sm="24" :md="12" :lg="8" :xl="8" style="padding-right:8px;margin-bottom:30px;">
         <div class="section-wrapper">
           <h4 class="section-title">最近财务记录</h4>
           <recent-transactions />
         </div>
       </el-col>
-      <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6" style="margin-bottom:30px;">
+      <el-col :xs="24" :sm="12" :md="6" :lg="4" :xl="4" style="margin-bottom:30px;">
         <div class="section-wrapper">
           <h4 class="section-title">今日待办</h4>
           <todo-list />
         </div>
       </el-col>
-      <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6" style="margin-bottom:30px;">
+      <el-col :xs="24" :sm="12" :md="6" :lg="4" :xl="4" style="margin-bottom:30px;">
         <div class="section-wrapper">
           <h4 class="section-title">快速操作</h4>
           <quick-actions />
         </div>
+      </el-col>
+      <el-col :xs="24" :sm="24" :md="12" :lg="8" :xl="8" style="margin-bottom:30px;">
+        <health-data-panel />
       </el-col>
     </el-row>
 
@@ -92,6 +95,7 @@ import BarChart from './components/BarChart'
 import RecentTransactions from './components/RecentTransactions'
 import TodoList from './components/TodoList'
 import QuickActions from './components/QuickActions'
+import HealthDataPanel from './components/HealthDataPanel'
 import Driver from 'driver.js'
 import 'driver.js/dist/driver.min.css'
 import steps from '@/views/guide/steps'
@@ -125,7 +129,8 @@ export default {
     BarChart,
     RecentTransactions,
     TodoList,
-    QuickActions
+    QuickActions,
+    HealthDataPanel
   },
   data() {
     return {

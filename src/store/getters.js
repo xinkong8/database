@@ -39,6 +39,13 @@ const getters = {
       today,
       completionRate: total > 0 ? Math.round((completed / total) * 100) : 0
     }
-  }
+  },
+
+  // 健康管理相关
+  latestWeight: state => state.health?.latestWeight,
+  weeklyExerciseCount: state => state.health?.weeklyExerciseCount || 0,
+  averageSleepDuration: state => state.health?.averageSleepDuration || 0,
+  healthTrend: state => state.health?.healthTrend || {},
+  healthDashboardData: state => state.health?.dashboardData || {}
 }
 export default getters

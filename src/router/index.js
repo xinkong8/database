@@ -12,6 +12,7 @@ import chartsRouter from './modules/charts'
 import tableRouter from './modules/table'
 import financeRouter from './modules/finance'
 import taskRouter from './modules/task'
+import healthRouter from './modules/health'
 
 /**
  * Note: sub-menu only appear when route children.length >= 1
@@ -124,6 +125,7 @@ export const asyncRoutes = [
   chartsRouter,
   tableRouter,
   financeRouter,
+  healthRouter,
 
   {
     path: '/tab',
