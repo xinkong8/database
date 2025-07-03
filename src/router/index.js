@@ -11,6 +11,7 @@ import Layout from '@/layout'
 import chartsRouter from './modules/charts'
 import tableRouter from './modules/table'
 import financeRouter from './modules/finance'
+import taskRouter from './modules/task'
 
 /**
  * Note: sub-menu only appear when route children.length >= 1
@@ -119,6 +120,7 @@ export const constantRoutes = [
  */
 export const asyncRoutes = [
   /** when your routing map is too long, you can split it into small modules **/
+  taskRouter,
   chartsRouter,
   tableRouter,
   financeRouter,

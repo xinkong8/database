@@ -2,16 +2,28 @@
   <section class="todoapp">
     <!-- header -->
     <header class="header">
-      <input class="new-todo" autocomplete="off" placeholder="待办事项" @keyup.enter="addTodo">
+      <input
+        v-model="newTodoText"
+        class="new-todo"
+        autocomplete="off"
+        placeholder="待办事项"
+        @keyup.enter="addTodo"
+      >
     </header>
     <!-- main section -->
-    <section v-show="todos.length" class="main">
-      <input id="toggle-all" :checked="allChecked" class="toggle-all" type="checkbox" @change="toggleAll({ done: !allChecked })">
+    <section v-show="todayTodos.length" class="main">
+      <input
+        id="toggle-all"
+        :checked="allChecked"
+        class="toggle-all"
+        type="checkbox"
+        @change="toggleAll(!allChecked)"
+      >
       <label for="toggle-all" />
       <ul class="todo-list">
         <todo
-          v-for="(todo, index) in filteredTodos"
-          :key="index"
+          v-for="todo in filteredTodos"
+          :key="todo.id"
           :todo="todo"
           @toggleTodo="toggleTodo"
           @editTodo="editTodo"
@@ -20,7 +32,7 @@
       </ul>
     </section>
     <!-- footer -->
-    <footer v-show="todos.length" class="footer">
+    <footer v-show="todayTodos.length" class="footer">
       <span class="todo-count">
         <strong>{{ remaining }}</strong>
         {{ remaining | pluralize('项') }} 剩余
@@ -30,32 +42,26 @@
           <a :class="{ selected: visibility === key }" @click.prevent="visibility = key">{{ key | capitalize }}</a>
         </li>
       </ul>
-      <!-- <button class="clear-completed" v-show="todos.length > remaining" @click="clearCompleted">
-        清除已完成
-      </button> -->
+      <div class="footer-actions">
+        <el-button type="text" size="mini" @click="goToTaskManagement">
+          <i class="el-icon-right" />
+          查看全部
+        </el-button>
+      </div>
     </footer>
   </section>
 </template>
 
 <script>
+import { mapGetters, mapActions } from 'vuex'
 import Todo from './Todo.vue'
 
-const STORAGE_KEY = 'todos'
 const filters = {
   all: todos => todos,
   active: todos => todos.filter(todo => !todo.done),
   completed: todos => todos.filter(todo => todo.done)
 }
-const defalutList = [
-  { text: '开始使用个人生活管理助手', done: false },
-  { text: '添加第一个待办事项', done: false },
-  { text: '设置个人目标', done: false },
-  { text: '查看仪表板', done: true },
-  { text: '学习使用功能', done: true },
-  { text: '个性化设置', done: true },
-  { text: '数据统计', done: true },
-  { text: '系统配置', done: true }
-]
+
 export default {
   components: { Todo },
   filters: {
@@ -66,61 +72,96 @@ export default {
     return {
       visibility: 'all',
       filters,
-      // todos: JSON.parse(window.localStorage.getItem(STORAGE_KEY)) || defalutList
-      todos: defalutList
+      newTodoText: ''
     }
   },
   computed: {
+    ...mapGetters([
+      'todayTodos'
+    ]),
     allChecked() {
-      return this.todos.every(todo => todo.done)
+      return this.todayTodos.length > 0 && this.todayTodos.every(todo => todo.done)
     },
     filteredTodos() {
-      return filters[this.visibility](this.todos)
+      return filters[this.visibility](this.todayTodos)
     },
     remaining() {
-      return this.todos.filter(todo => !todo.done).length
+      return this.todayTodos.filter(todo => !todo.done).length
     }
   },
   methods: {
-    setLocalStorage() {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(this.todos))
-    },
-    addTodo(e) {
-      const text = e.target.value
-      if (text.trim()) {
-        this.todos.push({
-          text,
-          done: false
-        })
-        this.setLocalStorage()
+    ...mapActions('task', [
+      'addTodo',
+      'updateTodo',
+      'deleteTodo',
+      'toggleTodo'
+    ]),
+    async addTodo() {
+      const text = this.newTodoText.trim()
+      if (text) {
+        try {
+          await this.addTodo({
+            text,
+            priority: 'medium',
+            category: 1, // 默认分类：个人
+            project: null,
+            dueDate: new Date().toISOString().split('T')[0] // 今天的日期
+          })
+          this.newTodoText = ''
+        } catch (error) {
+          console.error('添加待办事项失败:', error)
+        }
       }
-      e.target.value = ''
     },
-    toggleTodo(val) {
-      val.done = !val.done
-      this.setLocalStorage()
+    async toggleTodo(todo) {
+      try {
+        await this.toggleTodo(todo.id)
+      } catch (error) {
+        console.error('切换待办事项状态失败:', error)
+      }
     },
-    deleteTodo(todo) {
-      this.todos.splice(this.todos.indexOf(todo), 1)
-      this.setLocalStorage()
+    async deleteTodo(todo) {
+      try {
+        await this.deleteTodo(todo.id)
+      } catch (error) {
+        console.error('删除待办事项失败:', error)
+      }
     },
-    editTodo({ todo, value }) {
-      todo.text = value
-      this.setLocalStorage()
+    async editTodo({ todo, value }) {
+      try {
+        await this.updateTodo({
+          id: todo.id,
+          updates: { text: value }
+        })
+      } catch (error) {
+        console.error('编辑待办事项失败:', error)
+      }
     },
-    clearCompleted() {
-      this.todos = this.todos.filter(todo => !todo.done)
-      this.setLocalStorage()
+    async toggleAll(done) {
+      try {
+        for (const todo of this.todayTodos) {
+          if (todo.done !== done) {
+            await this.toggleTodo(todo.id)
+          }
+        }
+      } catch (error) {
+        console.error('批量切换待办事项状态失败:', error)
+      }
     },
-    toggleAll({ done }) {
-      this.todos.forEach(todo => {
-        todo.done = done
-        this.setLocalStorage()
-      })
+    goToTaskManagement() {
+      this.$router.push('/task/overview')
     }
   }
 }
 </script>
+
+<style lang="scss" scoped>
+.footer-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+</style>
 
 <style lang="scss">
   @import './index.scss';

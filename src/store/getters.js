@@ -10,6 +10,35 @@ const getters = {
   introduction: state => state.user.introduction,
   roles: state => state.user.roles,
   permission_routes: state => state.permission.routes,
-  errorLogs: state => state.errorLog.logs
+  errorLogs: state => state.errorLog.logs,
+
+  // 任务管理相关
+  todayTodos: state => {
+    const today = new Date().toDateString()
+    return state.task.todos.filter(todo => {
+      // 包含今天的任务，未完成的任务，以及最近的已完成任务
+      if (!todo.dueDate) return !todo.done // 没有截止日期的未完成任务
+      const todoDate = new Date(todo.dueDate).toDateString()
+      return todoDate === today || (!todo.done && todoDate <= today)
+    }).slice(0, 8) // 限制显示8个任务
+  },
+  taskStats: state => {
+    const todos = state.task.todos
+    const total = todos.length
+    const completed = todos.filter(todo => todo.done).length
+    const active = total - completed
+    const today = todos.filter(todo => {
+      const today = new Date().toDateString()
+      return !todo.done && (!todo.dueDate || new Date(todo.dueDate).toDateString() <= today)
+    }).length
+
+    return {
+      total,
+      completed,
+      active,
+      today,
+      completionRate: total > 0 ? Math.round((completed / total) * 100) : 0
+    }
+  }
 }
 export default getters
