@@ -8,8 +8,6 @@ import Layout from '@/layout'
 
 /* Router Modules */
 
-import chartsRouter from './modules/charts'
-import tableRouter from './modules/table'
 import financeRouter from './modules/finance'
 import taskRouter from './modules/task'
 import healthRouter from './modules/health'
@@ -122,8 +120,6 @@ export const constantRoutes = [
 export const asyncRoutes = [
   /** when your routing map is too long, you can split it into small modules **/
   taskRouter,
-  chartsRouter,
-  tableRouter,
   financeRouter,
   healthRouter,
 
