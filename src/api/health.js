@@ -3,7 +3,7 @@ import request from '@/utils/request'
 // 体重记录相关API
 export function getWeightRecords(params) {
   return request({
-    url: '/health/weight/records',
+    url: '/health/weight',
     method: 'get',
     params
   })
@@ -11,7 +11,7 @@ export function getWeightRecords(params) {
 
 export function addWeightRecord(data) {
   return request({
-    url: '/health/weight/add',
+    url: '/health/weight',
     method: 'post',
     data
   })
@@ -19,7 +19,7 @@ export function addWeightRecord(data) {
 
 export function updateWeightRecord(id, data) {
   return request({
-    url: `/health/weight/update/${id}`,
+    url: `/health/weight/${id}`,
     method: 'put',
     data
   })
@@ -27,7 +27,7 @@ export function updateWeightRecord(id, data) {
 
 export function deleteWeightRecord(id) {
   return request({
-    url: `/health/weight/delete/${id}`,
+    url: `/health/weight/${id}`,
     method: 'delete'
   })
 }
@@ -136,25 +136,10 @@ export function deleteHealthMetric(id) {
 }
 
 // 健康数据统计API
-export function getHealthStatistics(params) {
+export function getHealthStats(params) {
   return request({
-    url: '/health/statistics',
+    url: '/health/stats',
     method: 'get',
     params
-  })
-}
-
-export function getHealthDashboard() {
-  return request({
-    url: '/health/dashboard',
-    method: 'get'
-  })
-}
-
-export function getHealthTrends(type, period) {
-  return request({
-    url: '/health/trends',
-    method: 'get',
-    params: { type, period }
   })
 }

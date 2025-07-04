@@ -178,7 +178,7 @@
 </template>
 
 <script>
-import * as echarts from 'echarts'
+import echarts from 'echarts'
 
 export default {
   name: 'CategoryAnalysis',

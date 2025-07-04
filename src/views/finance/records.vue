@@ -19,9 +19,9 @@
           <el-select v-model="searchForm.category" placeholder="全部分类" clearable filterable>
             <el-option
               v-for="category in allCategories"
-              :key="category"
-              :label="category"
-              :value="category"
+              :key="category.value"
+              :label="category.label"
+              :value="category.value"
             />
           </el-select>
         </el-form-item>
@@ -93,18 +93,22 @@
 
         <el-table-column label="类型" width="80" align="center">
           <template slot-scope="scope">
-            <el-tag :type="scope.row.recordType === 'income' ? 'success' : 'danger'" size="small">
-              {{ scope.row.recordType === 'income' ? '收入' : '支出' }}
+            <el-tag :type="scope.row.type === 'income' ? 'success' : 'danger'" size="small">
+              {{ scope.row.type === 'income' ? '收入' : '支出' }}
             </el-tag>
           </template>
         </el-table-column>
 
-        <el-table-column prop="category" label="分类" width="120" />
+        <el-table-column label="分类" width="120">
+          <template slot-scope="scope">
+            {{ getCategoryName(scope.row.categoryId) }}
+          </template>
+        </el-table-column>
 
         <el-table-column prop="amount" label="金额" width="120" align="right" sortable>
           <template slot-scope="scope">
-            <span :class="scope.row.recordType === 'income' ? 'positive' : 'negative'">
-              {{ scope.row.recordType === 'income' ? '+' : '-' }}{{ scope.row.amount | money }}
+            <span :class="scope.row.type === 'income' ? 'positive' : 'negative'">
+              {{ scope.row.type === 'income' ? '+' : '-' }}{{ scope.row.amount | money }}
             </span>
           </template>
         </el-table-column>
@@ -156,8 +160,10 @@ export default {
   },
   filters: {
     money(val) {
-      if (typeof val !== 'number' || isNaN(val)) return '¥0.00'
-      return val.toLocaleString('zh-CN', { style: 'currency', currency: 'CNY' })
+      // 处理字符串和数字格式的金额
+      const num = typeof val === 'string' ? parseFloat(val) : val
+      if (typeof num !== 'number' || isNaN(num)) return '¥0.00'
+      return num.toLocaleString('zh-CN', { style: 'currency', currency: 'CNY' })
     }
   },
   data() {
@@ -179,13 +185,10 @@ export default {
   },
   computed: {
     allCategories() {
-      const categories = new Set()
-      this.allRecords.forEach(record => {
-        if (record.category) {
-          categories.add(record.category)
-        }
-      })
-      return Array.from(categories).sort()
+      return this.$store.state.finance.categories.map(cat => ({
+        label: cat.name,
+        value: cat.id
+      }))
     },
 
     paginatedRecords() {
@@ -195,85 +198,47 @@ export default {
     },
 
     totalIncome() {
-      return this.filteredRecords
-        .filter(r => r.recordType === 'income')
-        .reduce((sum, r) => sum + Number(r.amount), 0)
+      return this.$store.getters['finance/totalIncome']
     },
 
     totalExpense() {
-      return this.filteredRecords
-        .filter(r => r.recordType === 'expense')
-        .reduce((sum, r) => sum + Number(r.amount), 0)
+      return this.$store.getters['finance/totalExpense']
     },
 
     netBalance() {
-      return this.totalIncome - this.totalExpense
+      return this.$store.getters['finance/netBalance']
     }
   },
-  created() {
-    this.loadRecords()
+  async created() {
+    await this.loadData()
   },
   methods: {
-    loadRecords() {
-      const incomeList = JSON.parse(localStorage.getItem('incomeList') || '[]')
-        .map(item => ({
-          ...item,
-          recordType: 'income',
-          id: `income_${item.date}_${item.amount}_${Math.random()}`,
-          category: item.type || '其他',
-          description: item.remark || ''
-        }))
-
-      const expenseList = JSON.parse(localStorage.getItem('expenseList') || '[]')
-        .map(item => ({
-          ...item,
-          recordType: 'expense',
-          id: `expense_${item.date}_${item.amount}_${Math.random()}`,
-          category: item.type || '其他',
-          description: item.remark || ''
-        }))
-
-      this.allRecords = [...incomeList, ...expenseList]
-        .filter(item => item.date && item.amount)
-        .sort((a, b) => new Date(b.date) - new Date(a.date))
-
-      this.filteredRecords = [...this.allRecords]
+    async loadData() {
+      try {
+        await Promise.all([
+          this.$store.dispatch('finance/fetchRecords'),
+          this.$store.dispatch('finance/fetchCategories')
+        ])
+        this.allRecords = this.$store.getters['finance/filteredRecords']
+        this.filteredRecords = [...this.allRecords]
+      } catch (error) {
+        this.$message.error('数据加载失败')
+        console.error(error)
+      }
     },
 
     handleSearch() {
-      this.filteredRecords = this.allRecords.filter(record => {
-        // 类型筛选
-        if (this.searchForm.type && record.recordType !== this.searchForm.type) {
-          return false
-        }
-
-        // 分类筛选
-        if (this.searchForm.category && record.category !== this.searchForm.category) {
-          return false
-        }
-
-        // 日期范围筛选
-        if (this.searchForm.dateRange && this.searchForm.dateRange.length === 2) {
-          const recordDate = new Date(record.date)
-          const startDate = new Date(this.searchForm.dateRange[0])
-          const endDate = new Date(this.searchForm.dateRange[1])
-          if (recordDate < startDate || recordDate > endDate) {
-            return false
-          }
-        }
-
-        // 金额范围筛选
-        const amount = Number(record.amount)
-        if (this.searchForm.minAmount && amount < Number(this.searchForm.minAmount)) {
-          return false
-        }
-        if (this.searchForm.maxAmount && amount > Number(this.searchForm.maxAmount)) {
-          return false
-        }
-
-        return true
+      // 设置store中的筛选条件
+      this.$store.dispatch('finance/setFilters', {
+        type: this.searchForm.type,
+        category: this.searchForm.category,
+        dateRange: this.searchForm.dateRange,
+        minAmount: this.searchForm.minAmount,
+        maxAmount: this.searchForm.maxAmount
       })
 
+      // 获取筛选后的结果
+      this.filteredRecords = this.$store.getters['finance/filteredRecords']
       this.currentPage = 1
     },
 
@@ -285,7 +250,8 @@ export default {
         minAmount: '',
         maxAmount: ''
       }
-      this.filteredRecords = [...this.allRecords]
+      this.$store.dispatch('finance/resetFilters')
+      this.filteredRecords = this.$store.getters['finance/filteredRecords']
       this.currentPage = 1
     },
 
@@ -302,27 +268,19 @@ export default {
           type: 'warning'
         })
 
-        const storageKey = record.recordType === 'income' ? 'incomeList' : 'expenseList'
-        const records = JSON.parse(localStorage.getItem(storageKey) || '[]')
-
-        const updatedRecords = records.filter(r =>
-          !(r.date === record.date &&
-            r.amount === record.amount &&
-            r.type === record.category)
-        )
-
-        localStorage.setItem(storageKey, JSON.stringify(updatedRecords))
-        this.loadRecords()
-        this.handleSearch()
+        await this.$store.dispatch('finance/deleteRecord', record.id)
         this.$message.success('记录删除成功')
+        await this.loadData()
       } catch (error) {
-        // 用户取消删除
+        if (error.message) {
+          this.$message.error(error.message)
+        }
+        // 用户取消删除时error没有message
       }
     },
 
-    handleEditSuccess() {
-      this.loadRecords()
-      this.handleSearch()
+    async handleEditSuccess() {
+      await this.loadData()
     },
 
     handleSizeChange(val) {
@@ -332,6 +290,11 @@ export default {
 
     handleCurrentChange(val) {
       this.currentPage = val
+    },
+
+    getCategoryName(categoryId) {
+      const category = this.$store.getters['finance/categoryMap'][categoryId]
+      return category ? category.name : '未分类'
     }
   }
 }
