@@ -20,17 +20,8 @@ import './utils/error-log' // error log
 
 import * as filters from './filters' // global filters
 
-// 性能优化：抑制开发环境的被动事件监听器警告
-import { suppressPerformanceWarnings } from '@/utils/performance-optimization'
-
 import 'element-ui/lib/theme-chalk/index.css'
 Vue.use(Element)
-
-// 应用性能优化
-if (process.env.NODE_ENV === 'development') {
-  suppressPerformanceWarnings()
-  console.log('🔧 已应用性能优化，抑制被动事件监听器警告')
-}
 
 /**
  * If you don't want to use mock-server

@@ -1,27 +1,27 @@
-import {
-  getTasks,
-  createTask,
-  updateTask,
-  deleteTask,
-  getTaskCategories,
-  createTaskCategory,
-  updateTaskCategory,
-  deleteTaskCategory,
-  getProjects,
-  createProject,
-  updateProject,
-  deleteProject
-} from '@/api/task'
-
 const state = {
   // 待办事项
-  todos: [],
+  todos: JSON.parse(localStorage.getItem('todos')) || [
+    { id: 1, text: '开始使用个人生活管理助手', done: false, priority: 'high', category: 'personal', project: null, dueDate: null, createdAt: new Date().toISOString() },
+    { id: 2, text: '添加第一个待办事项', done: false, priority: 'medium', category: 'personal', project: null, dueDate: null, createdAt: new Date().toISOString() },
+    { id: 3, text: '设置个人目标', done: false, priority: 'medium', category: 'personal', project: null, dueDate: null, createdAt: new Date().toISOString() },
+    { id: 4, text: '查看仪表板', done: true, priority: 'low', category: 'personal', project: null, dueDate: null, createdAt: new Date().toISOString() },
+    { id: 5, text: '学习使用功能', done: true, priority: 'medium', category: 'study', project: null, dueDate: null, createdAt: new Date().toISOString() }
+  ],
 
   // 项目
-  projects: [],
+  projects: JSON.parse(localStorage.getItem('projects')) || [
+    { id: 1, name: '个人成长计划', description: '提升个人技能和生活质量', status: 'active', createdAt: new Date().toISOString(), color: '#409EFF' },
+    { id: 2, name: '工作效率提升', description: '优化工作流程，提高工作效率', status: 'active', createdAt: new Date().toISOString(), color: '#67C23A' }
+  ],
 
   // 分类
-  categories: [],
+  categories: JSON.parse(localStorage.getItem('categories')) || [
+    { id: 1, name: '个人', color: '#409EFF', icon: 'user' },
+    { id: 2, name: '工作', color: '#E6A23C', icon: 'suitcase' },
+    { id: 3, name: '学习', color: '#67C23A', icon: 'education' },
+    { id: 4, name: '健康', color: '#F56C6C', icon: 'plus' },
+    { id: 5, name: '娱乐', color: '#909399', icon: 'star' }
+  ],
 
   // 优先级选项
   priorities: [
@@ -41,72 +41,122 @@ const state = {
 }
 
 const mutations = {
-  // 设置数据
-  SET_TODOS(state, todos) {
-    state.todos = todos
-  },
-
-  SET_PROJECTS(state, projects) {
-    state.projects = projects
-  },
-
-  SET_CATEGORIES(state, categories) {
-    state.categories = categories
-  },
-
   // 待办事项相关
   ADD_TODO(state, todo) {
-    state.todos.push(todo)
+    const newTodo = {
+      id: Date.now(),
+      text: todo.text,
+      done: false,
+      priority: todo.priority || 'medium',
+      category: todo.category || 'personal',
+      project: todo.project || null,
+      dueDate: todo.dueDate || null,
+      createdAt: new Date().toISOString(),
+      ...todo
+    }
+    state.todos.push(newTodo)
+    localStorage.setItem('todos', JSON.stringify(state.todos))
   },
 
-  UPDATE_TODO(state, todo) {
-    const index = state.todos.findIndex(t => t.id === todo.id)
+  UPDATE_TODO(state, { id, updates }) {
+    const index = state.todos.findIndex(todo => todo.id === id)
     if (index !== -1) {
-      state.todos[index] = todo
+      state.todos[index] = { ...state.todos[index], ...updates }
+      localStorage.setItem('todos', JSON.stringify(state.todos))
     }
   },
 
   DELETE_TODO(state, id) {
     state.todos = state.todos.filter(todo => todo.id !== id)
+    localStorage.setItem('todos', JSON.stringify(state.todos))
   },
 
-  TOGGLE_TODO(state, todo) {
-    const index = state.todos.findIndex(t => t.id === todo.id)
-    if (index !== -1) {
-      state.todos[index] = todo
+  TOGGLE_TODO(state, id) {
+    const todo = state.todos.find(todo => todo.id === id)
+    if (todo) {
+      todo.done = !todo.done
+      localStorage.setItem('todos', JSON.stringify(state.todos))
     }
+  },
+
+  TOGGLE_ALL_TODOS(state, done) {
+    state.todos.forEach(todo => {
+      todo.done = done
+    })
+    localStorage.setItem('todos', JSON.stringify(state.todos))
+  },
+
+  CLEAR_COMPLETED_TODOS(state) {
+    state.todos = state.todos.filter(todo => !todo.done)
+    localStorage.setItem('todos', JSON.stringify(state.todos))
   },
 
   // 项目相关
   ADD_PROJECT(state, project) {
-    state.projects.push(project)
+    const newProject = {
+      id: Date.now(),
+      name: project.name,
+      description: project.description || '',
+      status: 'active',
+      color: project.color || '#409EFF',
+      createdAt: new Date().toISOString(),
+      ...project
+    }
+    state.projects.push(newProject)
+    localStorage.setItem('projects', JSON.stringify(state.projects))
   },
 
-  UPDATE_PROJECT(state, project) {
-    const index = state.projects.findIndex(p => p.id === project.id)
+  UPDATE_PROJECT(state, { id, updates }) {
+    const index = state.projects.findIndex(project => project.id === id)
     if (index !== -1) {
-      state.projects[index] = project
+      state.projects[index] = { ...state.projects[index], ...updates }
+      localStorage.setItem('projects', JSON.stringify(state.projects))
     }
   },
 
   DELETE_PROJECT(state, id) {
+    // 删除项目时，将相关任务的项目设置为null
+    state.todos.forEach(todo => {
+      if (todo.project === id) {
+        todo.project = null
+      }
+    })
     state.projects = state.projects.filter(project => project.id !== id)
+    localStorage.setItem('projects', JSON.stringify(state.projects))
+    localStorage.setItem('todos', JSON.stringify(state.todos))
   },
 
   // 分类相关
   ADD_CATEGORY(state, category) {
-    state.categories.push(category)
+    const newCategory = {
+      id: Date.now(),
+      name: category.name,
+      color: category.color || '#409EFF',
+      icon: category.icon || 'component',
+      ...category
+    }
+    state.categories.push(newCategory)
+    localStorage.setItem('categories', JSON.stringify(state.categories))
   },
 
-  UPDATE_CATEGORY(state, category) {
-    const index = state.categories.findIndex(c => c.id === category.id)
+  UPDATE_CATEGORY(state, { id, updates }) {
+    const index = state.categories.findIndex(category => category.id === id)
     if (index !== -1) {
-      state.categories[index] = category
+      state.categories[index] = { ...state.categories[index], ...updates }
+      localStorage.setItem('categories', JSON.stringify(state.categories))
     }
   },
 
   DELETE_CATEGORY(state, id) {
+    // 删除分类时，将相关任务的分类设置为默认分类
+    state.todos.forEach(todo => {
+      if (todo.category === id) {
+        todo.category = 'personal'
+      }
+    })
     state.categories = state.categories.filter(category => category.id !== id)
+    localStorage.setItem('categories', JSON.stringify(state.categories))
+    localStorage.setItem('todos', JSON.stringify(state.todos))
   },
 
   // 筛选相关
@@ -116,112 +166,55 @@ const mutations = {
 }
 
 const actions = {
-  // 获取数据
-  async fetchTasks({ commit }, params) {
-    const response = await getTasks(params)
-    if (response.success) {
-      commit('SET_TODOS', response.data)
-    }
-    return response
-  },
-
-  async fetchProjects({ commit }) {
-    const response = await getProjects()
-    if (response.success) {
-      commit('SET_PROJECTS', response.data)
-    }
-    return response
-  },
-
-  async fetchCategories({ commit }) {
-    const response = await getTaskCategories()
-    if (response.success) {
-      commit('SET_CATEGORIES', response.data)
-    }
-    return response
-  },
-
   // 待办事项相关
-  async addTodo({ commit }, todo) {
-    const response = await createTask(todo)
-    if (response.success) {
-      commit('ADD_TODO', response.data)
-    }
-    return response
+  addTodo({ commit }, todo) {
+    commit('ADD_TODO', todo)
   },
 
-  async updateTodo({ commit }, { id, data }) {
-    const response = await updateTask(id, data)
-    if (response.success) {
-      commit('UPDATE_TODO', response.data)
-    }
-    return response
+  updateTodo({ commit }, payload) {
+    commit('UPDATE_TODO', payload)
   },
 
-  async deleteTodo({ commit }, id) {
-    const response = await deleteTask(id)
-    if (response.success) {
-      commit('DELETE_TODO', id)
-    }
-    return response
+  deleteTodo({ commit }, id) {
+    commit('DELETE_TODO', id)
   },
 
-  async toggleTodo({ commit }, task) {
-    const response = await updateTask(task.id, { status: task.status === 'completed' ? 'pending' : 'completed' })
-    if (response.success) {
-      commit('TOGGLE_TODO', response.data)
-    }
-    return response
+  toggleTodo({ commit }, id) {
+    commit('TOGGLE_TODO', id)
+  },
+
+  toggleAllTodos({ commit }, done) {
+    commit('TOGGLE_ALL_TODOS', done)
+  },
+
+  clearCompletedTodos({ commit }) {
+    commit('CLEAR_COMPLETED_TODOS')
   },
 
   // 项目相关
-  async addProject({ commit }, project) {
-    const response = await createProject(project)
-    if (response.success) {
-      commit('ADD_PROJECT', response.data)
-    }
-    return response
+  addProject({ commit }, project) {
+    commit('ADD_PROJECT', project)
   },
 
-  async updateProject({ commit }, { id, data }) {
-    const response = await updateProject(id, data)
-    if (response.success) {
-      commit('UPDATE_PROJECT', response.data)
-    }
-    return response
+  updateProject({ commit }, payload) {
+    commit('UPDATE_PROJECT', payload)
   },
 
-  async deleteProject({ commit }, id) {
-    const response = await deleteProject(id)
-    if (response.success) {
-      commit('DELETE_PROJECT', id)
-    }
-    return response
+  deleteProject({ commit }, id) {
+    commit('DELETE_PROJECT', id)
   },
 
   // 分类相关
-  async addCategory({ commit }, category) {
-    const response = await createTaskCategory(category)
-    if (response.success) {
-      commit('ADD_CATEGORY', response.data)
-    }
-    return response
+  addCategory({ commit }, category) {
+    commit('ADD_CATEGORY', category)
   },
 
-  async updateCategory({ commit }, { id, data }) {
-    const response = await updateTaskCategory(id, data)
-    if (response.success) {
-      commit('UPDATE_CATEGORY', response.data)
-    }
-    return response
+  updateCategory({ commit }, payload) {
+    commit('UPDATE_CATEGORY', payload)
   },
 
-  async deleteCategory({ commit }, id) {
-    const response = await deleteTaskCategory(id)
-    if (response.success) {
-      commit('DELETE_CATEGORY', id)
-    }
-    return response
+  deleteCategory({ commit }, id) {
+    commit('DELETE_CATEGORY', id)
   },
 
   // 筛选相关

@@ -19,16 +19,14 @@
 </template>
 
 <script>
-import echarts from 'echarts'
+import * as echarts from 'echarts'
 
 export default {
   name: 'ExpenseCategoryChart',
   filters: {
     money(val) {
-      // 处理字符串和数字格式的金额
-      const num = typeof val === 'string' ? parseFloat(val) : val
-      if (typeof num !== 'number' || isNaN(num)) return '¥0.00'
-      return num.toLocaleString('zh-CN', { style: 'currency', currency: 'CNY' })
+      if (typeof val !== 'number' || isNaN(val)) return '¥0.00'
+      return val.toLocaleString('zh-CN', { style: 'currency', currency: 'CNY' })
     }
   },
   props: {

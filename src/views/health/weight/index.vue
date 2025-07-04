@@ -221,7 +221,7 @@
 
 <script>
 import { mapGetters, mapActions } from 'vuex'
-import echarts from 'echarts'
+import * as echarts from 'echarts'
 
 export default {
   name: 'WeightRecord',

@@ -3,7 +3,7 @@
     <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" autocomplete="on" label-position="left">
 
       <div class="title-container">
-        <h3 class="title">个人生活管理助手</h3>
+        <h3 class="title">Login Form</h3>
       </div>
 
       <el-form-item prop="username">
@@ -13,9 +13,9 @@
         <el-input
           ref="username"
           v-model="loginForm.username"
-          placeholder="邮箱地址"
+          placeholder="Username"
           name="username"
-          type="email"
+          type="text"
           tabindex="1"
           autocomplete="on"
         />
@@ -31,7 +31,7 @@
             ref="password"
             v-model="loginForm.password"
             :type="passwordType"
-            placeholder="密码"
+            placeholder="Password"
             name="password"
             tabindex="2"
             autocomplete="on"
@@ -45,98 +45,69 @@
         </el-form-item>
       </el-tooltip>
 
-      <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">登录</el-button>
+      <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">Login</el-button>
 
       <div style="position:relative">
         <div class="tips">
-          <span>测试账号: test@example.com</span>
-          <span>密码: 123456</span>
+          <span>Username : admin</span>
+          <span>Password : any</span>
+        </div>
+        <div class="tips">
+          <span style="margin-right:18px;">Username : editor</span>
+          <span>Password : any</span>
         </div>
 
-        <div style="text-align: center; margin-top: 20px;">
-          <el-button type="text" @click="showRegister = true">还没有账号？立即注册</el-button>
-        </div>
+        <el-button class="thirdparty-button" type="primary" @click="showDialog=true">
+          Or connect with
+        </el-button>
       </div>
     </el-form>
 
-    <!-- 注册对话框 -->
-    <el-dialog title="用户注册" :visible.sync="showRegister" width="400px">
-      <el-form ref="registerForm" :model="registerForm" :rules="registerRules" label-width="80px">
-        <el-form-item label="用户名" prop="username">
-          <el-input v-model="registerForm.username" placeholder="请输入用户名" />
-        </el-form-item>
-        <el-form-item label="邮箱" prop="email">
-          <el-input v-model="registerForm.email" placeholder="请输入邮箱地址" type="email" />
-        </el-form-item>
-        <el-form-item label="密码" prop="password">
-          <el-input v-model="registerForm.password" placeholder="请输入密码" type="password" />
-        </el-form-item>
-        <el-form-item label="确认密码" prop="confirmPassword">
-          <el-input v-model="registerForm.confirmPassword" placeholder="请再次输入密码" type="password" />
-        </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="showRegister = false">取消</el-button>
-        <el-button type="primary" :loading="registerLoading" @click="handleRegister">注册</el-button>
-      </div>
+    <el-dialog title="Or connect with" :visible.sync="showDialog">
+      Can not be simulated on local, so please combine you own business simulation! ! !
+      <br>
+      <br>
+      <br>
+      <social-sign />
     </el-dialog>
   </div>
 </template>
 
 <script>
-import { register } from '@/api/user'
+import { validUsername } from '@/utils/validate'
+import SocialSign from './components/SocialSignin'
 
 export default {
   name: 'Login',
+  components: { SocialSign },
   data() {
-    const validateEmail = (rule, value, callback) => {
-      const emailReg = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!emailReg.test(value)) {
-        callback(new Error('请输入正确的邮箱地址'))
+    const validateUsername = (rule, value, callback) => {
+      if (!validUsername(value)) {
+        callback(new Error('Please enter the correct user name'))
       } else {
         callback()
       }
     }
     const validatePassword = (rule, value, callback) => {
       if (value.length < 6) {
-        callback(new Error('密码长度不能少于6位'))
-      } else {
-        callback()
-      }
-    }
-    const validateConfirmPassword = (rule, value, callback) => {
-      if (value !== this.registerForm.password) {
-        callback(new Error('两次输入的密码不一致'))
+        callback(new Error('The password can not be less than 6 digits'))
       } else {
         callback()
       }
     }
     return {
       loginForm: {
-        username: 'test@example.com',
-        password: '123456'
+        username: 'admin',
+        password: '111111'
       },
       loginRules: {
-        username: [{ required: true, trigger: 'blur', validator: validateEmail }],
+        username: [{ required: true, trigger: 'blur', validator: validateUsername }],
         password: [{ required: true, trigger: 'blur', validator: validatePassword }]
-      },
-      registerForm: {
-        username: '',
-        email: '',
-        password: '',
-        confirmPassword: ''
-      },
-      registerRules: {
-        username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-        email: [{ required: true, trigger: 'blur', validator: validateEmail }],
-        password: [{ required: true, trigger: 'blur', validator: validatePassword }],
-        confirmPassword: [{ required: true, trigger: 'blur', validator: validateConfirmPassword }]
       },
       passwordType: 'password',
       capsTooltip: false,
       loading: false,
-      registerLoading: false,
-      showRegister: false,
+      showDialog: false,
       redirect: undefined,
       otherQuery: {}
     }
@@ -182,32 +153,19 @@ export default {
       })
     },
     handleLogin() {
-      console.log('🔍 步骤1: 点击登录按钮，开始表单验证')
-      console.log('表单数据:', this.loginForm)
-
       this.$refs.loginForm.validate(valid => {
         if (valid) {
-          console.log('✅ 步骤1: 表单验证通过')
           this.loading = true
-
-          console.log('🔍 步骤2: 开始调用Store的login action')
           this.$store.dispatch('user/login', this.loginForm)
-            .then((result) => {
-              console.log('✅ 步骤2: Store login action 成功返回:', result)
-              console.log('🔍 步骤3: 准备跳转到首页')
-              console.log('跳转路径:', this.redirect || '/')
-              console.log('查询参数:', this.otherQuery)
-
+            .then(() => {
               this.$router.push({ path: this.redirect || '/', query: this.otherQuery })
-              console.log('✅ 步骤3: 路由跳转命令已执行')
               this.loading = false
             })
-            .catch((error) => {
-              console.error('❌ 步骤2: Store login action 失败:', error)
+            .catch(() => {
               this.loading = false
             })
         } else {
-          console.log('❌ 步骤1: 表单验证失败!!')
+          console.log('error submit!!')
           return false
         }
       })
@@ -219,29 +177,6 @@ export default {
         }
         return acc
       }, {})
-    },
-    handleRegister() {
-      this.$refs.registerForm.validate(valid => {
-        if (valid) {
-          this.registerLoading = true
-          const { username, email, password } = this.registerForm
-
-          register({ username, email, password })
-            .then(response => {
-              this.registerLoading = false
-              if (response.success) {
-                this.$message.success('注册成功！请登录')
-                this.showRegister = false
-                this.loginForm.username = email
-                this.loginForm.password = password
-              }
-            })
-            .catch(error => {
-              this.registerLoading = false
-              this.$message.error(error.message || '注册失败')
-            })
-        }
-      })
     }
     // afterQRScan() {
     //   if (e.key === 'x-admin-oauth-code') {

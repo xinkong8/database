@@ -3,7 +3,22 @@ import {
   addWeightRecord,
   updateWeightRecord,
   deleteWeightRecord,
-  getHealthStats
+  getExerciseRecords,
+  addExerciseRecord,
+  updateExerciseRecord,
+  deleteExerciseRecord,
+  getExerciseTypes,
+  getSleepRecords,
+  addSleepRecord,
+  updateSleepRecord,
+  deleteSleepRecord,
+  getHealthMetrics,
+  addHealthMetric,
+  updateHealthMetric,
+  deleteHealthMetric,
+  getHealthStatistics,
+  getHealthDashboard,
+  getHealthTrends
 } from '@/api/health'
 
 const state = {
@@ -144,9 +159,7 @@ const actions = {
     commit('SET_WEIGHT_LOADING', true)
     try {
       const response = await getWeightRecords(params)
-      if (response.success) {
-        commit('SET_WEIGHT_RECORDS', response.data)
-      }
+      commit('SET_WEIGHT_RECORDS', response.data)
       return response.data
     } catch (error) {
       commit('SET_ERROR', error.message)
@@ -159,9 +172,7 @@ const actions = {
   async createWeightRecord({ commit }, data) {
     try {
       const response = await addWeightRecord(data)
-      if (response.success) {
-        commit('ADD_WEIGHT_RECORD', response.data)
-      }
+      commit('ADD_WEIGHT_RECORD', response.data)
       return response.data
     } catch (error) {
       commit('SET_ERROR', error.message)
@@ -172,9 +183,7 @@ const actions = {
   async updateWeightRecord({ commit }, { id, data }) {
     try {
       const response = await updateWeightRecord(id, data)
-      if (response.success) {
-        commit('UPDATE_WEIGHT_RECORD', response.data)
-      }
+      commit('UPDATE_WEIGHT_RECORD', response.data)
       return response.data
     } catch (error) {
       commit('SET_ERROR', error.message)
@@ -184,30 +193,208 @@ const actions = {
 
   async removeWeightRecord({ commit }, id) {
     try {
-      const response = await deleteWeightRecord(id)
-      if (response.success) {
-        commit('DELETE_WEIGHT_RECORD', id)
-      }
+      await deleteWeightRecord(id)
+      commit('DELETE_WEIGHT_RECORD', id)
     } catch (error) {
       commit('SET_ERROR', error.message)
       throw error
     }
   },
 
-  async fetchHealthStats({ commit }, params) {
+  // 运动追踪相关actions
+  async fetchExerciseRecords({ commit }, params) {
+    commit('SET_EXERCISE_LOADING', true)
     try {
-      const response = await getHealthStats(params)
-      if (response.success) {
-        commit('SET_HEALTH_STATISTICS', response.data)
-      }
+      const response = await getExerciseRecords(params)
+      commit('SET_EXERCISE_RECORDS', response.data)
+      return response.data
+    } catch (error) {
+      commit('SET_ERROR', error.message)
+      throw error
+    } finally {
+      commit('SET_EXERCISE_LOADING', false)
+    }
+  },
+
+  async fetchExerciseTypes({ commit }) {
+    try {
+      const response = await getExerciseTypes()
+      commit('SET_EXERCISE_TYPES', response.data)
       return response.data
     } catch (error) {
       commit('SET_ERROR', error.message)
       throw error
     }
-  }
+  },
 
-  // 其他健康功能暂未实现，预留给后续开发
+  async createExerciseRecord({ commit }, data) {
+    try {
+      const response = await addExerciseRecord(data)
+      commit('ADD_EXERCISE_RECORD', response.data)
+      return response.data
+    } catch (error) {
+      commit('SET_ERROR', error.message)
+      throw error
+    }
+  },
+
+  async updateExerciseRecord({ commit }, { id, data }) {
+    try {
+      const response = await updateExerciseRecord(id, data)
+      commit('UPDATE_EXERCISE_RECORD', response.data)
+      return response.data
+    } catch (error) {
+      commit('SET_ERROR', error.message)
+      throw error
+    }
+  },
+
+  async removeExerciseRecord({ commit }, id) {
+    try {
+      await deleteExerciseRecord(id)
+      commit('DELETE_EXERCISE_RECORD', id)
+    } catch (error) {
+      commit('SET_ERROR', error.message)
+      throw error
+    }
+  },
+
+  // 睡眠监控相关actions
+  async fetchSleepRecords({ commit }, params) {
+    commit('SET_SLEEP_LOADING', true)
+    try {
+      const response = await getSleepRecords(params)
+      commit('SET_SLEEP_RECORDS', response.data)
+      return response.data
+    } catch (error) {
+      commit('SET_ERROR', error.message)
+      throw error
+    } finally {
+      commit('SET_SLEEP_LOADING', false)
+    }
+  },
+
+  async createSleepRecord({ commit }, data) {
+    try {
+      const response = await addSleepRecord(data)
+      commit('ADD_SLEEP_RECORD', response.data)
+      return response.data
+    } catch (error) {
+      commit('SET_ERROR', error.message)
+      throw error
+    }
+  },
+
+  async updateSleepRecord({ commit }, { id, data }) {
+    try {
+      const response = await updateSleepRecord(id, data)
+      commit('UPDATE_SLEEP_RECORD', response.data)
+      return response.data
+    } catch (error) {
+      commit('SET_ERROR', error.message)
+      throw error
+    }
+  },
+
+  async removeSleepRecord({ commit }, id) {
+    try {
+      await deleteSleepRecord(id)
+      commit('DELETE_SLEEP_RECORD', id)
+    } catch (error) {
+      commit('SET_ERROR', error.message)
+      throw error
+    }
+  },
+
+  // 健康指标相关actions
+  async fetchHealthMetrics({ commit }, params) {
+    commit('SET_METRICS_LOADING', true)
+    try {
+      const response = await getHealthMetrics(params)
+      commit('SET_HEALTH_METRICS', response.data)
+      return response.data
+    } catch (error) {
+      commit('SET_ERROR', error.message)
+      throw error
+    } finally {
+      commit('SET_METRICS_LOADING', false)
+    }
+  },
+
+  async createHealthMetric({ commit }, data) {
+    try {
+      const response = await addHealthMetric(data)
+      commit('ADD_HEALTH_METRIC', response.data)
+      return response.data
+    } catch (error) {
+      commit('SET_ERROR', error.message)
+      throw error
+    }
+  },
+
+  async updateHealthMetric({ commit }, { id, data }) {
+    try {
+      const response = await updateHealthMetric(id, data)
+      commit('UPDATE_HEALTH_METRIC', response.data)
+      return response.data
+    } catch (error) {
+      commit('SET_ERROR', error.message)
+      throw error
+    }
+  },
+
+  async removeHealthMetric({ commit }, id) {
+    try {
+      await deleteHealthMetric(id)
+      commit('DELETE_HEALTH_METRIC', id)
+    } catch (error) {
+      commit('SET_ERROR', error.message)
+      throw error
+    }
+  },
+
+  // 统计数据相关actions
+  async fetchHealthStatistics({ commit }, params) {
+    commit('SET_LOADING', true)
+    try {
+      const response = await getHealthStatistics(params)
+      commit('SET_HEALTH_STATISTICS', response.data)
+      return response.data
+    } catch (error) {
+      commit('SET_ERROR', error.message)
+      throw error
+    } finally {
+      commit('SET_LOADING', false)
+    }
+  },
+
+  async fetchDashboardData({ commit }) {
+    commit('SET_LOADING', true)
+    try {
+      const response = await getHealthDashboard()
+      commit('SET_DASHBOARD_DATA', response.data)
+      return response.data
+    } catch (error) {
+      commit('SET_ERROR', error.message)
+      throw error
+    } finally {
+      commit('SET_LOADING', false)
+    }
+  },
+
+  async fetchTrendsData({ commit }, { type, period }) {
+    commit('SET_LOADING', true)
+    try {
+      const response = await getHealthTrends(type, period)
+      commit('SET_TRENDS_DATA', response.data)
+      return response.data
+    } catch (error) {
+      commit('SET_ERROR', error.message)
+      throw error
+    } finally {
+      commit('SET_LOADING', false)
+    }
+  }
 }
 
 const getters = {
@@ -216,20 +403,25 @@ const getters = {
     return state.weightRecords.length > 0 ? state.weightRecords[0] : null
   },
 
-  // BMI计算
-  currentBMI: (state, getters) => {
-    const latest = getters.latestWeight
-    if (!latest || !latest.height) return null
-    const heightInM = latest.height / 100
-    return Math.round((latest.weight / (heightInM * heightInM)) * 10) / 10
+  // 本周运动次数
+  weeklyExerciseCount: state => {
+    const oneWeekAgo = new Date()
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+    return state.exerciseRecords.filter(record =>
+      new Date(record.date) >= oneWeekAgo
+    ).length
   },
 
-  // 体重趋势
-  weightTrend: state => {
-    if (state.weightRecords.length < 2) return null
-    const latest = state.weightRecords[0]
-    const previous = state.weightRecords[1]
-    return latest.weight - previous.weight
+  // 平均睡眠时长
+  averageSleepDuration: state => {
+    if (state.sleepRecords.length === 0) return 0
+    const totalHours = state.sleepRecords.reduce((sum, record) => sum + record.duration, 0)
+    return Math.round((totalHours / state.sleepRecords.length) * 10) / 10
+  },
+
+  // 健康趋势
+  healthTrend: state => {
+    return state.trendsData || {}
   }
 }
 

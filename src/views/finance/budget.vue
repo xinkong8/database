@@ -159,7 +159,7 @@
 </template>
 
 <script>
-import echarts from 'echarts'
+import * as echarts from 'echarts'
 import BudgetAnalysis from './components/BudgetAnalysis'
 import EditBudgetDialog from './components/EditBudgetDialog'
 

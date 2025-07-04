@@ -4,9 +4,7 @@
   "description": "个人生活管理助手 - 一个功能强大的个人生活管理工具，帮助您更好地管理日常事务",
   "author": "Pan <panfree23@gmail.com>",
   "scripts": {
-    "dev": "vue-cli-service serve --port 9527",
-    "dev:check": "node check-port.js && npm run dev",
-    "check-port": "node check-port.js",
+    "dev": "vue-cli-service serve",
     "lint": "eslint --ext .js,.vue src",
     "build:prod": "vue-cli-service build",
     "build:stage": "vue-cli-service build --mode staging",

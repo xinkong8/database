@@ -115,14 +115,13 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import echarts from 'echarts'
+import * as echarts from 'echarts'
 
 export default {
   name: 'HealthDataPanel',
   data() {
     return {
       chart: null,
-      resizeHandler: null,
       healthReminders: [
         {
           id: 1,
@@ -178,105 +177,85 @@ export default {
   beforeDestroy() {
     if (this.chart) {
       this.chart.dispose()
-      this.chart = null
-    }
-
-    if (this.resizeHandler) {
-      window.removeEventListener('resize', this.resizeHandler)
-      this.resizeHandler = null
     }
   },
 
   methods: {
     initChart() {
       const chartDom = document.getElementById('healthTrendChart')
-      if (!chartDom) {
-        console.warn('HealthDataPanel: 找不到图表容器元素 #healthTrendChart')
-        return
-      }
+      if (!chartDom) return
 
-      try {
-        this.chart = echarts.init(chartDom)
+      this.chart = echarts.init(chartDom)
 
-        const option = {
-          tooltip: {
-            trigger: 'axis',
-            axisPointer: {
-              type: 'shadow'
+      const option = {
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'shadow'
+          }
+        },
+        legend: {
+          data: ['运动', '睡眠', '健康指数'],
+          textStyle: {
+            fontSize: 12
+          }
+        },
+        grid: {
+          left: '3%',
+          right: '4%',
+          bottom: '3%',
+          top: '15%',
+          containLabel: true
+        },
+        xAxis: {
+          type: 'category',
+          data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+          axisLabel: {
+            fontSize: 10
+          }
+        },
+        yAxis: {
+          type: 'value',
+          axisLabel: {
+            fontSize: 10
+          }
+        },
+        series: [
+          {
+            name: '运动',
+            type: 'bar',
+            data: [30, 45, 0, 60, 30, 90, 45],
+            itemStyle: {
+              color: '#67C23A'
             }
           },
-          legend: {
-            data: ['运动', '睡眠', '健康指数'],
-            textStyle: {
-              fontSize: 12
+          {
+            name: '睡眠',
+            type: 'line',
+            data: [7.5, 6.8, 7.2, 8.0, 7.1, 7.8, 7.5],
+            itemStyle: {
+              color: '#409EFF'
             }
           },
-          grid: {
-            left: '3%',
-            right: '4%',
-            bottom: '3%',
-            top: '15%',
-            containLabel: true
-          },
-          xAxis: {
-            type: 'category',
-            data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
-            axisLabel: {
-              fontSize: 10
-            }
-          },
-          yAxis: {
-            type: 'value',
-            axisLabel: {
-              fontSize: 10
-            }
-          },
-          series: [
-            {
-              name: '运动',
-              type: 'bar',
-              data: [30, 45, 0, 60, 30, 90, 45],
-              itemStyle: {
-                color: '#67C23A'
-              }
-            },
-            {
-              name: '睡眠',
-              type: 'line',
-              data: [7.5, 6.8, 7.2, 8.0, 7.1, 7.8, 7.5],
-              itemStyle: {
-                color: '#409EFF'
-              }
-            },
-            {
-              name: '健康指数',
-              type: 'line',
-              data: [85, 82, 78, 90, 85, 92, 88],
-              itemStyle: {
-                color: '#E6A23C'
-              }
-            }
-          ]
-        }
-
-        this.chart.setOption(option)
-
-        this.resizeHandler = () => {
-          if (this.chart && !this.chart.isDisposed()) {
-            try {
-              this.chart.resize()
-            } catch (error) {
-              console.warn('HealthDataPanel: 图表resize失败:', error)
+          {
+            name: '健康指数',
+            type: 'line',
+            data: [85, 82, 78, 90, 85, 92, 88],
+            itemStyle: {
+              color: '#E6A23C'
             }
           }
-        }
-
-        window.addEventListener('resize', this.resizeHandler)
-
-        console.log('✅ HealthDataPanel: ECharts图表初始化成功')
-      } catch (error) {
-        console.error('❌ HealthDataPanel: ECharts图表初始化失败:', error)
+        ]
       }
+
+      this.chart.setOption(option)
+
+      // 响应式
+      window.addEventListener('resize', () => {
+        if (this.chart) {
+          this.chart.resize()
+        }
+      })
     },
 
     goToPage(path) {
