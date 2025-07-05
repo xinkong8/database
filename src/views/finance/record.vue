@@ -113,6 +113,8 @@
 </template>
 
 <script>
+import { createFinanceRecord, listFinanceRecords } from '@/api/finance'
+
 export default {
   name: 'FinanceRecord',
   filters: {
@@ -143,7 +145,10 @@ export default {
           { required: true, message: '请选择日期', trigger: 'change' }
         ]
       },
-      recentRecords: []
+      recentRecords: [],
+      todayIncome: 0,
+      todayExpense: 0,
+      todayBalance: 0
     }
   },
   computed: {
@@ -151,65 +156,66 @@ export default {
       return this.recordType === 'expense'
         ? ['餐饮', '交通', '购物', '娱乐', '住房', '医疗', '教育', '其他']
         : ['工资', '奖金', '投资', '兼职', '礼金', '其他']
-    },
-    todayIncome() {
-      return this.getTodayRecords('income').reduce((sum, r) => sum + Number(r.amount), 0)
-    },
-    todayExpense() {
-      return this.getTodayRecords('expense').reduce((sum, r) => sum + Number(r.amount), 0)
-    },
-    todayBalance() {
-      return this.todayIncome - this.todayExpense
     }
   },
-  created() {
-    this.loadRecentRecords()
+  async created() {
+    this.resetForm()
+    await this.loadRecentRecords()
   },
   methods: {
-    getTodayRecords(type) {
+    async updateTodayStats() {
       const today = new Date().toISOString().split('T')[0]
-      const allRecords = this.getAllRecords()
-      return allRecords.filter(r => r.date === today && r.recordType === type)
+      try {
+        const { records } = await listFinanceRecords({ page: 1, limit: 1000, startDate: today, endDate: today })
+        this.todayIncome = records.filter(r => r.type === 'income').reduce((s, r) => s + Number(r.amount), 0)
+        this.todayExpense = records.filter(r => r.type === 'expense').reduce((s, r) => s + Number(r.amount), 0)
+        this.todayBalance = this.todayIncome - this.todayExpense
+      } catch (err) {
+        console.error('今日统计获取失败', err)
+      }
     },
-
-    getAllRecords() {
-      // 模拟从localStorage或API获取数据
-      const records = localStorage.getItem('financeRecords')
-      return records ? JSON.parse(records) : []
+    async getRecentRecords(limit = 10) {
+      const { records } = await listFinanceRecords({ page: 1, limit })
+      return records.map(r => ({
+        id: r.id,
+        date: r.date,
+        recordType: r.type,
+        category: r.category,
+        amount: Number(r.amount),
+        description: r.description || ''
+      }))
     },
-
-    saveRecord(record) {
-      const records = this.getAllRecords()
-      record.id = Date.now().toString()
-      record.recordType = this.recordType
-      records.unshift(record)
-      localStorage.setItem('financeRecords', JSON.stringify(records))
+    async saveRecord(record) {
+      await createFinanceRecord({
+        ...record,
+        type: this.recordType
+      })
     },
-
-    loadRecentRecords() {
-      this.recentRecords = this.getAllRecords().slice(0, 10)
+    async loadRecentRecords() {
+      this.recentRecords = await this.getRecentRecords(10)
+      await this.updateTodayStats()
     },
-
     submitForm() {
-      this.$refs.recordForm.validate(valid => {
-        if (valid) {
-          this.submitting = true
-
-          setTimeout(() => {
-            this.saveRecord({ ...this.form })
-            this.loadRecentRecords()
-            this.$message.success('记录保存成功')
-            this.resetForm()
-            this.submitting = false
-          }, 500)
+      this.$refs.recordForm.validate(async valid => {
+        if (!valid) return
+        this.submitting = true
+        try {
+          await this.saveRecord({ ...this.form })
+          this.$message.success('记录保存成功')
+          await this.loadRecentRecords()
+          this.resetForm()
+        } catch (err) {
+          console.error('保存记录失败', err)
+          this.$message.error('保存失败')
+        } finally {
+          this.submitting = false
         }
       })
     },
-
     resetForm() {
       this.form = {
         amount: '',
-        category: '',
+        category: this.categories[0] || '',
         date: new Date().toISOString().split('T')[0],
         description: ''
       }

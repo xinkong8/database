@@ -19,7 +19,7 @@ router.get('/', authenticateToken, async (req, res) => {
     const offset = (page - 1) * limit;
 
     // 构建查询条件
-    let sql = 'SELECT id, amount, type, category, description, date, created_at, updated_at FROM finance_records WHERE user_id = ?';
+    let sql = 'SELECT id, amount, type, category, description, DATE_FORMAT(date, "%Y-%m-%d") as date, created_at, updated_at FROM finance_records WHERE user_id = ?';
     let params = [userId];
 
     if (type && ['income', 'expense'].includes(type)) {
@@ -111,7 +111,7 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // 获取单条财务记录
-router.get('/:id', authenticateToken, async (req, res) => {
+router.get('/:id(\\d+)', authenticateToken, async (req, res) => {
   try {
     const userId = req.userId;
     const recordId = parseInt(req.params.id);
@@ -474,6 +474,78 @@ router.get('/statistics/summary', authenticateToken, async (req, res) => {
       success: false,
       message: '获取财务统计失败'
     });
+  }
+});
+
+// ==================== 预算接口 ====================
+
+// 获取指定月份预算列表
+router.get('/budgets', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const month = req.query.month || new Date().toISOString().slice(0, 7); // yyyy-MM
+    const recordType = req.query.type || 'expense';
+
+    const budgets = await dbQuery(
+      'SELECT id, month, type, category, amount, note FROM finance_budgets WHERE user_id = ? AND month = ? AND type = ? ORDER BY category',
+      [userId, month, recordType]
+    );
+
+    res.json({ success: true, data: budgets });
+  } catch (error) {
+    console.error('获取预算失败:', error);
+    res.status(500).json({ success: false, message: '获取预算失败' });
+  }
+});
+
+// 新增或更新预算（按唯一键覆盖）
+router.post('/budgets', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { month, type = 'expense', category, amount, note } = req.body;
+
+    if (!month || !category || !amount) {
+      return res.status(400).json({ success: false, message: '月份、分类、金额为必填项' });
+    }
+
+    const numAmount = parseFloat(amount);
+    if (isNaN(numAmount) || numAmount <= 0) {
+      return res.status(400).json({ success: false, message: '金额必须大于0' });
+    }
+
+    await dbRun(
+      `INSERT INTO finance_budgets (user_id, month, type, category, amount, note)
+       VALUES (?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE amount = VALUES(amount), note = VALUES(note), updated_at = CURRENT_TIMESTAMP`,
+      [userId, month, type, category, numAmount, note || null]
+    );
+
+    res.json({ success: true, message: '预算保存成功' });
+  } catch (error) {
+    console.error('保存预算失败:', error);
+    res.status(500).json({ success: false, message: '保存预算失败' });
+  }
+});
+
+// 删除预算
+router.delete('/budgets', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { month, type = 'expense', category } = req.body;
+
+    if (!month || !category) {
+      return res.status(400).json({ success: false, message: '月份和分类为必填项' });
+    }
+
+    await dbRun(
+      'DELETE FROM finance_budgets WHERE user_id = ? AND month = ? AND type = ? AND category = ?',
+      [userId, month, type, category]
+    );
+
+    res.json({ success: true, message: '预算已删除' });
+  } catch (error) {
+    console.error('删除预算失败:', error);
+    res.status(500).json({ success: false, message: '删除预算失败' });
   }
 });
 

@@ -160,6 +160,28 @@ async function createTables() {
           UNIQUE KEY unique_user_setting (user_id, setting_key)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       `
+    },
+
+    // 财务预算表
+    {
+      name: 'finance_budgets',
+      sql: `
+        CREATE TABLE IF NOT EXISTS finance_budgets (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          user_id INT NOT NULL,
+          month CHAR(7) NOT NULL,
+          type ENUM('income','expense') NOT NULL DEFAULT 'expense',
+          category VARCHAR(50) NOT NULL,
+          amount DECIMAL(12,2) NOT NULL,
+          note TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          UNIQUE KEY uq_user_month_cat (user_id, month, type, category),
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+          INDEX idx_month (month),
+          INDEX idx_category (category)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      `
     }
   ];
 
@@ -171,6 +193,20 @@ async function createTables() {
       console.error(`❌ 创建${table.name}表失败:`, error.message);
       throw error;
     }
+  }
+
+  // 额外列检查：finance_budgets.type
+  try {
+    const [rows] = await pool.query("SHOW COLUMNS FROM finance_budgets LIKE 'type'");
+    if (rows.length === 0) {
+      console.log('🔧 finance_budgets 缺少 type 列，正在自动添加...');
+      await pool.execute("ALTER TABLE finance_budgets ADD COLUMN type ENUM('income','expense') NOT NULL DEFAULT 'expense' AFTER month");
+      // 如需唯一键包含 type，可根据需要手动调整
+      console.log('✅ type 列已添加');
+    }
+  } catch (err) {
+    console.error('❌ 检查/添加 finance_budgets.type 列失败:', err.message);
+    throw err;
   }
 }
 

@@ -148,6 +148,7 @@
 
 <script>
 import EditRecordDialog from './components/EditRecordDialog'
+import { listFinanceRecords, deleteFinanceRecord } from '@/api/finance'
 
 export default {
   name: 'FinanceRecords',
@@ -210,34 +211,26 @@ export default {
       return this.totalIncome - this.totalExpense
     }
   },
-  created() {
-    this.loadRecords()
+  mounted() {
+    this.fetchAllRecords()
   },
   methods: {
-    loadRecords() {
-      const incomeList = JSON.parse(localStorage.getItem('incomeList') || '[]')
-        .map(item => ({
-          ...item,
-          recordType: 'income',
-          id: `income_${item.date}_${item.amount}_${Math.random()}`,
-          category: item.type || '其他',
-          description: item.remark || ''
+    async fetchAllRecords() {
+      try {
+        const { records } = await listFinanceRecords({ page: 1, limit: 1000 })
+        this.allRecords = records.map(r => ({
+          id: r.id,
+          date: r.date,
+          recordType: r.type,
+          category: r.category,
+          amount: Number(r.amount),
+          description: r.description || ''
         }))
-
-      const expenseList = JSON.parse(localStorage.getItem('expenseList') || '[]')
-        .map(item => ({
-          ...item,
-          recordType: 'expense',
-          id: `expense_${item.date}_${item.amount}_${Math.random()}`,
-          category: item.type || '其他',
-          description: item.remark || ''
-        }))
-
-      this.allRecords = [...incomeList, ...expenseList]
-        .filter(item => item.date && item.amount)
-        .sort((a, b) => new Date(b.date) - new Date(a.date))
-
-      this.filteredRecords = [...this.allRecords]
+        this.filteredRecords = [...this.allRecords]
+      } catch (err) {
+        console.error('加载记录失败', err)
+        this.$message.error('加载记录失败')
+      }
     },
 
     handleSearch() {
@@ -296,32 +289,24 @@ export default {
 
     async deleteRecord(record) {
       try {
-        await this.$confirm('确定要删除这条记录吗？', '提示', {
+        await this.$confirm('确定删除该记录？', '提示', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning'
         })
-
-        const storageKey = record.recordType === 'income' ? 'incomeList' : 'expenseList'
-        const records = JSON.parse(localStorage.getItem(storageKey) || '[]')
-
-        const updatedRecords = records.filter(r =>
-          !(r.date === record.date &&
-            r.amount === record.amount &&
-            r.type === record.category)
-        )
-
-        localStorage.setItem(storageKey, JSON.stringify(updatedRecords))
-        this.loadRecords()
-        this.handleSearch()
-        this.$message.success('记录删除成功')
-      } catch (error) {
-        // 用户取消删除
+        await deleteFinanceRecord(record.id)
+        this.$message.success('删除成功')
+        await this.fetchAllRecords()
+      } catch (err) {
+        if (err !== 'cancel') {
+          console.error('删除失败', err)
+          this.$message.error('删除失败')
+        }
       }
     },
 
     handleEditSuccess() {
-      this.loadRecords()
+      this.fetchAllRecords()
       this.handleSearch()
     },
 

@@ -115,6 +115,7 @@
 
           <el-tab-pane label="分类分析" name="category">
             <CategoryAnalysis
+              ref="categoryAnalysis"
               :date-range="dateRange"
               :records="filteredRecords"
               @refresh="refreshData"
@@ -123,6 +124,7 @@
 
           <el-tab-pane label="对比分析" name="comparison">
             <ComparisonAnalysis
+              ref="comparisonAnalysis"
               :date-range="dateRange"
               :records="filteredRecords"
               @refresh="refreshData"
@@ -131,6 +133,7 @@
 
           <el-tab-pane label="习惯分析" name="habits">
             <HabitsAnalysis
+              ref="habitsAnalysis"
               :date-range="dateRange"
               :records="filteredRecords"
               @refresh="refreshData"
@@ -156,6 +159,7 @@ import TrendAnalysis from './components/TrendAnalysis.vue'
 import CategoryAnalysis from './components/CategoryAnalysis.vue'
 import ComparisonAnalysis from './components/ComparisonAnalysis.vue'
 import HabitsAnalysis from './components/HabitsAnalysis.vue'
+import { listFinanceRecords } from '@/api/finance'
 
 export default {
   name: 'FinanceStatistics',
@@ -171,6 +175,7 @@ export default {
       dateRange: null,
       exportDialogVisible: false,
       exportType: 'json',
+      records: [],
       pickerOptions: {
         shortcuts: [
           {
@@ -205,12 +210,8 @@ export default {
     }
   },
   computed: {
-    records() {
-      try {
-        return JSON.parse(localStorage.getItem('financeRecords')) || []
-      } catch (e) {
-        return []
-      }
+    recordsLocal() {
+      return this.records
     },
     isEmpty() {
       return this.records.length === 0
@@ -255,10 +256,19 @@ export default {
       }
     }
   },
-  mounted() {
-    this.initializeDateRange()
+  async mounted() {
+    await this.refreshData()
   },
   methods: {
+    async refreshData() {
+      try {
+        const { records } = await listFinanceRecords({ page: 1, limit: 5000 })
+        this.records = records.map(r => ({ ...r, amount: Number(r.amount) }))
+      } catch (err) {
+        console.error('加载财务记录失败', err)
+        this.$message.error('加载记录失败')
+      }
+    },
     initializeDateRange() {
       // 默认选择最近6个月
       const end = new Date()
@@ -270,7 +280,19 @@ export default {
       this.dateRange = value
     },
     handleTabClick(tab) {
-      this.activeTab = tab.name
+      if (tab.name === 'category') {
+        this.$nextTick(() => {
+          this.$refs.categoryAnalysis && this.$refs.categoryAnalysis.resizeCharts && this.$refs.categoryAnalysis.resizeCharts()
+        })
+      } else if (tab.name === 'comparison') {
+        this.$nextTick(() => {
+          this.$refs.comparisonAnalysis && this.$refs.comparisonAnalysis.resizeCharts && this.$refs.comparisonAnalysis.resizeCharts()
+        })
+      } else if (tab.name === 'habits') {
+        this.$nextTick(() => {
+          this.$refs.habitsAnalysis && this.$refs.habitsAnalysis.resizeCharts && this.$refs.habitsAnalysis.resizeCharts()
+        })
+      }
     },
     handleExport(command) {
       this.exportType = command
@@ -302,7 +324,7 @@ export default {
     },
     generateTestData() {
       const testData = this.createTestData()
-      localStorage.setItem('financeRecords', JSON.stringify(testData))
+      this.records = testData
       this.$message.success('测试数据生成成功！')
       this.refreshData()
     },
@@ -418,9 +440,8 @@ export default {
     formatAmount(amount) {
       return amount.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     },
-    refreshData() {
-      // 强制刷新计算属性
-      this.$forceUpdate()
+    refreshChild() {
+      this.refreshData()
     }
   }
 }

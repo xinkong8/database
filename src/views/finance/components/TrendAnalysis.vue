@@ -206,8 +206,12 @@ export default {
           income: item.income,
           expense: item.expense,
           net: item.net,
-          incomeGrowth: prevItem ? ((item.income - prevItem.income) / prevItem.income * 100) : null,
-          expenseGrowth: prevItem ? ((item.expense - prevItem.expense) / prevItem.expense * 100) : null,
+          incomeGrowth: (prevItem && prevItem.income !== 0)
+            ? ((item.income - prevItem.income) / prevItem.income * 100)
+            : null,
+          expenseGrowth: (prevItem && prevItem.expense !== 0)
+            ? ((item.expense - prevItem.expense) / prevItem.expense * 100)
+            : null,
           savingRate: item.income > 0 ? (item.net / item.income * 100) : 0,
           suggestion: this.generateSuggestion(item, prevItem)
         }

@@ -34,17 +34,17 @@ router.get('/', authenticateToken, async (req, res) => {
       dbGet('SELECT COALESCE(SUM(amount), 0) as total FROM finance_records WHERE user_id = ? AND type = "expense"', [userId]),
       dbGet('SELECT COALESCE(SUM(amount), 0) as total FROM finance_records WHERE user_id = ? AND type = "income" AND DATE_FORMAT(date, "%Y-%m") = DATE_FORMAT(NOW(), "%Y-%m")', [userId]),
       dbGet('SELECT COALESCE(SUM(amount), 0) as total FROM finance_records WHERE user_id = ? AND type = "expense" AND DATE_FORMAT(date, "%Y-%m") = DATE_FORMAT(NOW(), "%Y-%m")', [userId]),
-      dbQuery('SELECT * FROM finance_records WHERE user_id = ? ORDER BY date DESC, created_at DESC LIMIT 5', [userId]),
+      dbQuery('SELECT id, amount, type, category, description, DATE_FORMAT(date, "%Y-%m-%d") as date FROM finance_records WHERE user_id = ? ORDER BY date DESC, created_at DESC LIMIT 5', [userId]),
       
       // 任务数据
       dbGet('SELECT COUNT(*) as count FROM tasks WHERE user_id = ?', [userId]),
       dbGet('SELECT COUNT(*) as count FROM tasks WHERE user_id = ? AND status = "completed"', [userId]),
       dbGet('SELECT COUNT(*) as count FROM tasks WHERE user_id = ? AND status IN ("pending", "in_progress")', [userId]),
-      dbQuery('SELECT * FROM tasks WHERE user_id = ? AND (due_date = ? OR due_date IS NULL) AND status != "completed" ORDER BY priority DESC, created_at DESC LIMIT 5', [userId, today]),
+      dbQuery('SELECT id, title, description, status, priority, DATE_FORMAT(due_date, "%Y-%m-%d") as due_date, created_at FROM tasks WHERE user_id = ? AND (due_date = ? OR due_date IS NULL) AND status != "completed" ORDER BY priority DESC, created_at DESC LIMIT 5', [userId, today]),
       
       // 健康数据
-      dbQuery('SELECT * FROM health_records WHERE user_id = ? ORDER BY date DESC, created_at DESC LIMIT 5', [userId]),
-      dbQuery('SELECT * FROM health_records WHERE user_id = ? AND date = ? ORDER BY created_at DESC', [userId, today])
+      dbQuery('SELECT id, type, value, unit, notes, DATE_FORMAT(date, "%Y-%m-%d") as date FROM health_records WHERE user_id = ? ORDER BY date DESC, created_at DESC LIMIT 5', [userId]),
+      dbQuery('SELECT id, type, value, unit, notes, DATE_FORMAT(date, "%Y-%m-%d") as date FROM health_records WHERE user_id = ? AND date = ? ORDER BY created_at DESC', [userId, today])
     ]);
 
     // 构建响应数据
@@ -207,7 +207,7 @@ router.get('/finance-overview', authenticateToken, async (req, res) => {
       dbGet('SELECT COALESCE(SUM(amount), 0) as total FROM finance_records WHERE user_id = ? AND type = "expense"', [userId]),
       dbGet('SELECT COALESCE(SUM(amount), 0) as total FROM finance_records WHERE user_id = ? AND type = "income" AND DATE_FORMAT(date, "%Y-%m") = DATE_FORMAT(NOW(), "%Y-%m")', [userId]),
       dbGet('SELECT COALESCE(SUM(amount), 0) as total FROM finance_records WHERE user_id = ? AND type = "expense" AND DATE_FORMAT(date, "%Y-%m") = DATE_FORMAT(NOW(), "%Y-%m")', [userId]),
-      dbQuery('SELECT * FROM finance_records WHERE user_id = ? ORDER BY date DESC, created_at DESC LIMIT 5', [userId])
+      dbQuery('SELECT id, amount, type, category, description, DATE_FORMAT(date, "%Y-%m-%d") as date FROM finance_records WHERE user_id = ? ORDER BY date DESC, created_at DESC LIMIT 5', [userId])
     ]);
 
     res.json({
@@ -239,7 +239,7 @@ router.get('/task-overview', authenticateToken, async (req, res) => {
       dbGet('SELECT COUNT(*) as count FROM tasks WHERE user_id = ?', [userId]),
       dbGet('SELECT COUNT(*) as count FROM tasks WHERE user_id = ? AND status = "completed"', [userId]),
       dbGet('SELECT COUNT(*) as count FROM tasks WHERE user_id = ? AND status IN ("pending", "in_progress")', [userId]),
-      dbQuery('SELECT * FROM tasks WHERE user_id = ? AND (due_date = ? OR due_date IS NULL) AND status != "completed" ORDER BY priority DESC, created_at DESC LIMIT 5', [userId, today])
+      dbQuery('SELECT id, title, description, status, priority, DATE_FORMAT(due_date, "%Y-%m-%d") as due_date, created_at FROM tasks WHERE user_id = ? AND (due_date = ? OR due_date IS NULL) AND status != "completed" ORDER BY priority DESC, created_at DESC LIMIT 5', [userId, today])
     ]);
 
     res.json({
@@ -266,8 +266,8 @@ router.get('/health-overview', authenticateToken, async (req, res) => {
     const today = new Date().toISOString().split('T')[0];
 
     const [ recentHealthRecords, todayHealthRecords ] = await Promise.all([
-      dbQuery('SELECT * FROM health_records WHERE user_id = ? ORDER BY date DESC, created_at DESC LIMIT 5', [userId]),
-      dbQuery('SELECT * FROM health_records WHERE user_id = ? AND date = ? ORDER BY created_at DESC', [userId, today])
+      dbQuery('SELECT id, type, value, unit, notes, DATE_FORMAT(date, "%Y-%m-%d") as date FROM health_records WHERE user_id = ? ORDER BY date DESC, created_at DESC LIMIT 5', [userId]),
+      dbQuery('SELECT id, type, value, unit, notes, DATE_FORMAT(date, "%Y-%m-%d") as date FROM health_records WHERE user_id = ? AND date = ? ORDER BY created_at DESC', [userId, today])
     ]);
 
     res.json({

@@ -24,17 +24,6 @@
       <el-row :gutter="20">
         <el-col :span="6">
           <div class="overview-card">
-            <div class="card-icon income">
-              <i class="el-icon-arrow-up" />
-            </div>
-            <div class="card-content">
-              <h3>预算收入</h3>
-              <p class="amount">¥{{ formatAmount(budgetSummary.totalIncome) }}</p>
-            </div>
-          </div>
-        </el-col>
-        <el-col :span="6">
-          <div class="overview-card">
             <div class="card-icon expense">
               <i class="el-icon-arrow-down" />
             </div>
@@ -61,7 +50,7 @@
               <i :class="budgetSummary.remaining >= 0 ? 'el-icon-check' : 'el-icon-warning'" />
             </div>
             <div class="card-content">
-              <h3>预算结余</h3>
+              <h3>预计结余</h3>
               <p class="amount" :class="budgetSummary.remaining >= 0 ? 'success' : 'danger'">
                 ¥{{ formatAmount(budgetSummary.remaining) }}
               </p>
@@ -140,6 +129,7 @@
 
       <el-tab-pane label="预算分析" name="analysis">
         <BudgetAnalysis
+          ref="budgetAnalysis"
           :budgets="budgets"
           :records="records"
           :month="selectedMonth"
@@ -162,6 +152,8 @@
 import * as echarts from 'echarts'
 import BudgetAnalysis from './components/BudgetAnalysis'
 import EditBudgetDialog from './components/EditBudgetDialog'
+import { listBudgets, saveBudget, deleteBudget } from '@/api/budget'
+import { listFinanceRecords } from '@/api/finance'
 
 export default {
   name: 'FinanceBudget',
@@ -187,10 +179,6 @@ export default {
       const currentBudgets = this.budgets.filter(b => b.month === this.selectedMonth)
       const currentRecords = this.records.filter(r => r.date.startsWith(this.selectedMonth))
 
-      const totalIncome = currentRecords
-        .filter(r => r.recordType === 'income')
-        .reduce((sum, r) => sum + Number(r.amount), 0)
-
       const totalExpense = currentBudgets.reduce((sum, b) => sum + Number(b.amount), 0)
 
       const actualExpense = currentRecords
@@ -198,7 +186,6 @@ export default {
         .reduce((sum, r) => sum + Number(r.amount), 0)
 
       return {
-        totalIncome,
         totalExpense,
         actualExpense,
         remaining: totalExpense - actualExpense
@@ -217,11 +204,9 @@ export default {
         const percentage = Math.min(Math.round((actual / budgetAmount) * 100), 100)
         const remaining = budgetAmount - actual
 
-        let status = 'normal'
+        let status = 'success'
         if (percentage >= 100) status = 'exception'
         else if (percentage >= 80) status = 'warning'
-        else if (percentage >= 60) status = 'normal'
-        else status = 'success'
 
         return {
           category: budget.category,
@@ -234,31 +219,41 @@ export default {
       })
     }
   },
-  mounted() {
-    this.loadData()
+  watch: {
+    activeTab(val) {
+      if (val === 'analysis') {
+        this.$nextTick(() => {
+          this.$refs.budgetAnalysis && this.$refs.budgetAnalysis.updateRadarChart && this.$refs.budgetAnalysis.updateRadarChart()
+        })
+      }
+    }
+  },
+  async mounted() {
+    await this.loadData()
     this.$nextTick(() => {
       this.initCharts()
     })
   },
   methods: {
-    loadData() {
-      // 从localStorage加载数据
-      const budgets = localStorage.getItem('budgets')
-      if (budgets) {
-        this.budgets = JSON.parse(budgets)
-      }
+    async loadData() {
+      // 获取预算数据
+      this.budgets = await listBudgets({ month: this.selectedMonth, type: 'expense' })
 
-      const records = localStorage.getItem('financeRecords')
-      if (records) {
-        this.records = JSON.parse(records)
+      // 从数据库拉取支出记录，limit 设大一些一次性拿完，后续可按需改为分页
+      try {
+        const { records } = await listFinanceRecords({ page: 1, limit: 5000, type: 'expense' })
+        // 为保持与现有计算逻辑兼容，补充 recordType 字段
+        this.records = records.map(r => ({ ...r, recordType: r.type }))
+      } catch (err) {
+        console.error('加载支出记录失败', err)
+        this.records = []
       }
     },
 
-    saveData() {
-      localStorage.setItem('budgets', JSON.stringify(this.budgets))
-    },
+    saveData() {},
 
-    handleMonthChange() {
+    async handleMonthChange() {
+      await this.loadData()
       this.$nextTick(() => {
         this.updateCharts()
       })
@@ -282,38 +277,40 @@ export default {
       this.budgetDialogVisible = true
     },
 
-    handleBudgetSave(budgetData) {
-      const existingIndex = this.budgets.findIndex(
-        b => b.month === budgetData.month && b.category === budgetData.category
-      )
+    async handleBudgetSave(budgetData) {
+      try {
+        // 调用后端保存预算，固定 type 为 expense
+        await saveBudget({
+          ...budgetData,
+          amount: Number(parseFloat(budgetData.amount).toFixed(2)),
+          type: 'expense'
+        })
+        this.$message.success('预算保存成功')
+        this.budgetDialogVisible = false
 
-      if (existingIndex !== -1) {
-        this.budgets[existingIndex] = { ...budgetData }
-        this.$message.success('预算更新成功')
-      } else {
-        this.budgets.push({ ...budgetData })
-        this.$message.success('预算设置成功')
-      }
-
-      this.saveData()
-      this.budgetDialogVisible = false
-      this.$nextTick(() => {
-        this.updateCharts()
-      })
-    },
-
-    handleBudgetDelete(budgetData) {
-      const index = this.budgets.findIndex(
-        b => b.month === budgetData.month && b.category === budgetData.category
-      )
-
-      if (index !== -1) {
-        this.budgets.splice(index, 1)
-        this.saveData()
-        this.$message.success('预算删除成功')
+        // 重新加载预算数据并刷新图表
+        await this.loadData()
         this.$nextTick(() => {
           this.updateCharts()
         })
+      } catch (err) {
+        console.error('保存预算失败', err)
+        this.$message.error('保存预算失败')
+      }
+    },
+
+    async handleBudgetDelete(budgetData) {
+      try {
+        await deleteBudget({ month: budgetData.month, type: 'expense', category: budgetData.category })
+        this.$message.success('预算删除成功')
+
+        await this.loadData()
+        this.$nextTick(() => {
+          this.updateCharts()
+        })
+      } catch (err) {
+        console.error('删除预算失败', err)
+        this.$message.error('删除预算失败')
       }
     },
 
@@ -566,11 +563,6 @@ export default {
         align-items: center;
         justify-content: center;
         font-size: 20px;
-
-        &.income {
-          background: linear-gradient(135deg, #67C23A, #85ce61);
-          color: white;
-        }
 
         &.expense {
           background: linear-gradient(135deg, #F56C6C, #f78989);

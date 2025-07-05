@@ -420,34 +420,34 @@ export default {
   },
   mounted() {
     this.initCharts()
-    window.addEventListener('resize', this.handleResize)
+    window.addEventListener('resize', this.resizeCharts)
   },
   beforeDestroy() {
-    this.destroyCharts()
-    window.removeEventListener('resize', this.handleResize)
+    this.disposeCharts()
+    window.removeEventListener('resize', this.resizeCharts)
   },
   methods: {
     initCharts() {
-      this.dailySpendingChart = echarts.init(this.$refs.dailySpendingChart)
-      this.amountDistributionChart = echarts.init(this.$refs.amountDistributionChart)
-      this.hourlyHeatmapChart = echarts.init(this.$refs.hourlyHeatmapChart)
-      this.weeklyPatternChart = echarts.init(this.$refs.weeklyPatternChart)
-      this.monthlyDistributionChart = echarts.init(this.$refs.monthlyDistributionChart)
-      this.updateCharts()
+      this.$nextTick(() => {
+        this.disposeCharts()
+        this.dailySpendingChart = echarts.init(this.$refs.dailySpendingChart)
+        this.amountDistributionChart = echarts.init(this.$refs.amountDistributionChart)
+        this.hourlyHeatmapChart = echarts.init(this.$refs.hourlyHeatmapChart)
+        this.weeklyPatternChart = echarts.init(this.$refs.weeklyPatternChart)
+        this.monthlyDistributionChart = echarts.init(this.$refs.monthlyDistributionChart)
+        this.updateCharts()
+      })
     },
-    destroyCharts() {
-      if (this.dailySpendingChart) this.dailySpendingChart.dispose()
-      if (this.amountDistributionChart) this.amountDistributionChart.dispose()
-      if (this.hourlyHeatmapChart) this.hourlyHeatmapChart.dispose()
-      if (this.weeklyPatternChart) this.weeklyPatternChart.dispose()
-      if (this.monthlyDistributionChart) this.monthlyDistributionChart.dispose()
+    disposeCharts() {
+      [this.dailySpendingChart, this.amountDistributionChart, this.hourlyHeatmapChart, this.weeklyPatternChart, this.monthlyDistributionChart].forEach(c => {
+        if (c) c.dispose()
+      })
+      this.dailySpendingChart = this.amountDistributionChart = this.hourlyHeatmapChart = this.weeklyPatternChart = this.monthlyDistributionChart = null
     },
-    handleResize() {
-      if (this.dailySpendingChart) this.dailySpendingChart.resize()
-      if (this.amountDistributionChart) this.amountDistributionChart.resize()
-      if (this.hourlyHeatmapChart) this.hourlyHeatmapChart.resize()
-      if (this.weeklyPatternChart) this.weeklyPatternChart.resize()
-      if (this.monthlyDistributionChart) this.monthlyDistributionChart.resize()
+    resizeCharts() {
+      [this.dailySpendingChart, this.amountDistributionChart, this.hourlyHeatmapChart, this.weeklyPatternChart, this.monthlyDistributionChart].forEach(c => {
+        if (c) c.resize()
+      })
     },
     updateCharts() {
       if (this.analysisType === 'spending') {

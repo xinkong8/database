@@ -307,28 +307,34 @@ export default {
   },
   mounted() {
     this.initCharts()
-    window.addEventListener('resize', this.handleResize)
+    window.addEventListener('resize', this.resizeCharts)
   },
   beforeDestroy() {
-    this.destroyCharts()
-    window.removeEventListener('resize', this.handleResize)
+    this.disposeCharts()
+    window.removeEventListener('resize', this.resizeCharts)
   },
   methods: {
     initCharts() {
-      this.pieChart = echarts.init(this.$refs.pieChart)
-      this.barChart = echarts.init(this.$refs.barChart)
-      this.trendChart = echarts.init(this.$refs.trendChart)
-      this.updateAllCharts()
+      this.$nextTick(() => {
+        this.disposeCharts()
+        this.pieChart = echarts.init(this.$refs.pieChart)
+        this.barChart = echarts.init(this.$refs.barChart)
+        if (this.$refs.trendChart) {
+          this.trendChart = echarts.init(this.$refs.trendChart)
+        }
+        this.updateAllCharts()
+      })
     },
-    destroyCharts() {
-      if (this.pieChart) this.pieChart.dispose()
-      if (this.barChart) this.barChart.dispose()
-      if (this.trendChart) this.trendChart.dispose()
+    disposeCharts() {
+      [this.pieChart, this.barChart, this.trendChart].forEach(c => {
+        if (c) c.dispose()
+      })
+      this.pieChart = this.barChart = this.trendChart = null
     },
-    handleResize() {
-      if (this.pieChart) this.pieChart.resize()
-      if (this.barChart) this.barChart.resize()
-      if (this.trendChart) this.trendChart.resize()
+    resizeCharts() {
+      [this.pieChart, this.barChart, this.trendChart].forEach(c => {
+        if (c) c.resize()
+      })
     },
     updateAllCharts() {
       this.updatePieChart()

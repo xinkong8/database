@@ -14,7 +14,7 @@
             <div class="progress-wrapper">
               <el-progress
                 :percentage="achievementRate"
-                :status="achievementRate >= 80 ? 'success' : achievementRate >= 60 ? 'normal' : 'exception'"
+                :status="achievementRate >= 80 ? 'success' : achievementRate >= 60 ? 'warning' : 'exception'"
                 :stroke-width="12"
               />
             </div>
@@ -161,11 +161,14 @@ export default {
       if (this.currentBudgets.length === 0) return 0
 
       const totalBudget = this.currentBudgets.reduce((sum, b) => sum + Number(b.amount), 0)
+      if (totalBudget === 0) return 0
+
       const totalActual = this.currentRecords
         .filter(r => r.recordType === 'expense')
         .reduce((sum, r) => sum + Number(r.amount), 0)
 
-      return Math.round((totalActual / totalBudget) * 100)
+      // 限制在 0-100 之间并四舍五入
+      return Math.min(100, Math.max(0, Math.round((totalActual / totalBudget) * 100)))
     },
     executionDays() {
       const now = new Date()
@@ -191,16 +194,20 @@ export default {
         )
         const actual = categoryRecords.reduce((sum, r) => sum + Number(r.amount), 0)
         const budgetAmount = Number(budget.amount)
-        const percentage = Math.round((actual / budgetAmount) * 100)
+        const percentage = budgetAmount === 0
+          ? 0
+          : Math.min(100, Math.max(0, Math.round((actual / budgetAmount) * 100)))
         const variance = budgetAmount - actual
         const dailyAverage = actual / this.executionDays
 
-        // 趋势预测
+        // 日均支出推算趋势预测（>110% danger，>90% warning，其余 success）
         const projectedTotal = dailyAverage * this.getDaysInMonth()
-        let trend = 'normal'
-        if (projectedTotal > budgetAmount * 1.1) trend = 'danger'
-        else if (projectedTotal > budgetAmount * 0.9) trend = 'warning'
-        else trend = 'success'
+        let trend = 'success'
+        if (projectedTotal > budgetAmount * 1.1) {
+          trend = 'danger'
+        } else if (projectedTotal > budgetAmount * 0.9) {
+          trend = 'warning'
+        }
 
         // 状态判断
         let status = 'normal'
@@ -277,11 +284,22 @@ export default {
       this.$nextTick(() => {
         this.updateRadarChart()
       })
+    },
+    categoryAnalysis: {
+      deep: true,
+      handler(newVal) {
+        if (newVal && newVal.length) {
+          this.$nextTick(() => {
+            this.updateRadarChart()
+          })
+        }
+      }
     }
   },
   mounted() {
+    // 初次挂载根据已有数据决定是否绘制
     this.$nextTick(() => {
-      this.initRadarChart()
+      this.updateRadarChart()
     })
   },
   methods: {
@@ -332,12 +350,14 @@ export default {
     },
 
     initRadarChart() {
+      // 如果已有实例，先销毁避免重复初始化错误
+      if (this.radarChart) {
+        this.radarChart.dispose()
+      }
       const chart = echarts.init(this.$refs.radarChart)
 
       const categories = this.categoryAnalysis.map(item => item.category)
-      const budgetData = this.categoryAnalysis.map(item =>
-        Math.min(100, Math.round((item.actual / item.budget) * 100))
-      )
+      const budgetData = this.categoryAnalysis.map(item => item.percentage)
 
       const indicator = categories.map(category => ({
         name: category,
@@ -370,9 +390,14 @@ export default {
     },
 
     updateRadarChart() {
-      if (this.radarChart) {
-        this.initRadarChart()
+      if (!this.radarChart) {
+        if (this.categoryAnalysis.length) {
+          this.initRadarChart()
+        }
+        return
       }
+
+      this.initRadarChart()
     }
   }
 }

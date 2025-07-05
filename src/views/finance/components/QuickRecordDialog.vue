@@ -58,6 +58,8 @@
 </template>
 
 <script>
+import { createFinanceRecord } from '@/api/finance'
+
 export default {
   name: 'QuickRecordDialog',
   props: {
@@ -125,12 +127,15 @@ export default {
       return records ? JSON.parse(records) : []
     },
 
-    saveRecord(record) {
-      const records = this.getAllRecords()
-      record.id = Date.now().toString()
-      record.recordType = this.recordType
-      records.unshift(record)
-      localStorage.setItem('financeRecords', JSON.stringify(records))
+    getDefaultCategory() {
+      return this.categories[0] || ''
+    },
+
+    async saveRecord(record) {
+      await createFinanceRecord({
+        ...record,
+        type: this.recordType
+      })
     },
 
     handleSubmit() {
@@ -138,13 +143,19 @@ export default {
         if (valid) {
           this.submitting = true
 
-          setTimeout(() => {
-            this.saveRecord({ ...this.form })
-            this.$message.success(`${this.recordType === 'income' ? '收入' : '支出'}记录保存成功`)
-            this.$emit('success')
-            this.handleClose()
-            this.submitting = false
-          }, 500)
+          this.saveRecord({ ...this.form })
+            .then(() => {
+              this.$message.success(`${this.recordType === 'income' ? '收入' : '支出'}记录保存成功`)
+              this.$emit('success')
+              this.handleClose()
+            })
+            .catch(err => {
+              console.error('保存记录失败', err)
+              this.$message.error('保存失败')
+            })
+            .finally(() => {
+              this.submitting = false
+            })
         }
       })
     },
@@ -157,7 +168,7 @@ export default {
     resetForm() {
       this.form = {
         amount: '',
-        category: '',
+        category: this.getDefaultCategory(),
         date: new Date().toISOString().split('T')[0],
         description: ''
       }

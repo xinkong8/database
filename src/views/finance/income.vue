@@ -35,6 +35,8 @@
 
 <script>
 import IncomePieChart from './IncomePieChart.vue'
+import { listFinanceRecords, createFinanceRecord } from '@/api/finance'
+
 function formatDate(date) {
   if (!date) return ''
   const d = new Date(date)
@@ -58,20 +60,46 @@ export default {
         remark: ''
       },
       typeOptions,
-      incomeList: JSON.parse(localStorage.getItem('incomeList') || '[]')
+      incomeList: []
     }
   },
+  async mounted() {
+    await this.fetchIncomeList()
+  },
   methods: {
-    addIncome() {
+    async fetchIncomeList() {
+      try {
+        const { records } = await listFinanceRecords({ page: 1, limit: 100, type: 'income' })
+        this.incomeList = records.map(r => ({
+          date: r.date,
+          type: r.category,
+          amount: Number(r.amount),
+          remark: r.description || ''
+        }))
+      } catch (err) {
+        console.error('加载收入记录失败', err)
+      }
+    },
+    async addIncome() {
       if (!this.form.date || !this.form.amount || !this.form.type) {
         this.$message.error('请填写完整信息')
         return
       }
-      const record = { ...this.form, date: formatDate(this.form.date) }
-      this.incomeList.push(record)
-      localStorage.setItem('incomeList', JSON.stringify(this.incomeList))
-      this.form = { date: '', type: '', amount: null, remark: '' }
-      this.$message.success('添加成功')
+      try {
+        await createFinanceRecord({
+          date: formatDate(this.form.date),
+          category: this.form.type,
+          amount: this.form.amount,
+          description: this.form.remark,
+          type: 'income'
+        })
+        this.$message.success('添加成功')
+        this.form = { date: '', type: '', amount: null, remark: '' }
+        await this.fetchIncomeList()
+      } catch (err) {
+        console.error('添加收入失败', err)
+        this.$message.error('添加失败')
+      }
     }
   }
 }

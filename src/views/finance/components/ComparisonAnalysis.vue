@@ -355,23 +355,27 @@ export default {
   },
   mounted() {
     this.initCharts()
-    window.addEventListener('resize', this.handleResize)
+    window.addEventListener('resize', this.resizeCharts)
   },
   beforeDestroy() {
-    this.destroyCharts()
-    window.removeEventListener('resize', this.handleResize)
+    this.disposeCharts()
+    window.removeEventListener('resize', this.resizeCharts)
   },
   methods: {
     initCharts() {
-      this.periodChart = echarts.init(this.$refs.periodChart)
-      this.categoryComparisonChart = echarts.init(this.$refs.categoryComparisonChart)
-      this.updateCharts()
+      this.$nextTick(() => {
+        this.disposeCharts()
+        this.periodChart = echarts.init(this.$refs.periodChart)
+        this.categoryComparisonChart = echarts.init(this.$refs.categoryComparisonChart)
+        this.updateCharts()
+      })
     },
-    destroyCharts() {
+    disposeCharts() {
       if (this.periodChart) this.periodChart.dispose()
       if (this.categoryComparisonChart) this.categoryComparisonChart.dispose()
+      this.periodChart = this.categoryComparisonChart = null
     },
-    handleResize() {
+    resizeCharts() {
       if (this.periodChart) this.periodChart.resize()
       if (this.categoryComparisonChart) this.categoryComparisonChart.resize()
     },

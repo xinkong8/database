@@ -162,6 +162,9 @@
 import MonthlyTrendChart from './components/MonthlyTrendChart'
 import ExpenseCategoryChart from './components/ExpenseCategoryChart'
 import QuickRecordDialog from './components/QuickRecordDialog'
+import { fetchFinanceOverview } from '@/api/dashboard'
+import { listFinanceRecords } from '@/api/finance'
+import { export_json_to_excel } from '@/vendor/Export2Excel'
 
 export default {
   name: 'FinanceOverview',
@@ -198,198 +201,78 @@ export default {
       recentRecords: []
     }
   },
-  created() {
-    this.loadData()
+  async mounted() {
+    await this.loadOverview()
   },
   methods: {
-    loadData() {
-      this.calcStatistics()
-      this.prepareChartData()
-      this.loadRecentRecords()
-      this.calcExpenseByCategory()
-    },
+    async loadOverview() {
+      try {
+        const data = await fetchFinanceOverview()
+        this.totalBalance = data.balance
+        this.monthIncome = data.monthlyIncome
+        this.monthExpense = data.monthlyExpense
+        // 上月数据用于增长率计算
+        const lastMonthDate = new Date()
+        lastMonthDate.setMonth(lastMonthDate.getMonth() - 1)
+        const lastMonthStr = lastMonthDate.toISOString().slice(0, 7)
 
-    calcStatistics() {
-      const now = new Date()
-      const currentYear = now.getFullYear()
-      const currentMonth = now.getMonth() + 1
-      const lastMonth = currentMonth === 1 ? 12 : currentMonth - 1
-      const lastMonthYear = currentMonth === 1 ? currentYear - 1 : currentYear
+        const lastMonthRecords = await listFinanceRecords({ limit: 1000, page: 1, startDate: `${lastMonthStr}-01`, endDate: `${lastMonthStr}-31` })
+        const lastIncome = lastMonthRecords.records.filter(r => r.type === 'income').reduce((s, r) => s + Number(r.amount), 0)
+        const lastExpense = lastMonthRecords.records.filter(r => r.type === 'expense').reduce((s, r) => s + Number(r.amount), 0)
 
-      // 获取所有记录
-      const allRecords = this.getAllRecords()
+        this.incomeGrowth = lastIncome === 0 ? 0 : Math.round(((this.monthIncome - lastIncome) / lastIncome) * 100)
+        this.expenseGrowth = lastExpense === 0 ? 0 : Math.round(((this.monthExpense - lastExpense) / lastExpense) * 100)
+        this.balanceChange = data.monthlyBalance
+        this.savingRate = this.monthIncome === 0 ? 0 : Math.round(((this.monthIncome - this.monthExpense) / this.monthIncome) * 100)
+        this.savingRateChange = 0 // 计算可选
 
-      // 计算总余额
-      const totalIncome = allRecords
-        .filter(r => r.recordType === 'income')
-        .reduce((sum, r) => sum + Number(r.amount), 0)
-      const totalExpense = allRecords
-        .filter(r => r.recordType === 'expense')
-        .reduce((sum, r) => sum + Number(r.amount), 0)
-      this.totalBalance = totalIncome - totalExpense
+        this.recentRecords = data.recentRecords.map(r => ({
+          date: r.date,
+          recordType: r.type,
+          category: r.category,
+          description: r.description,
+          amount: Number(r.amount)
+        }))
 
-      // 计算本月收支
-      const currentMonthRecords = allRecords.filter(r => {
-        const recordDate = new Date(r.date)
-        return recordDate.getFullYear() === currentYear &&
-               recordDate.getMonth() + 1 === currentMonth
-      })
-
-      this.monthIncome = currentMonthRecords
-        .filter(r => r.recordType === 'income')
-        .reduce((sum, r) => sum + Number(r.amount), 0)
-
-      this.monthExpense = currentMonthRecords
-        .filter(r => r.recordType === 'expense')
-        .reduce((sum, r) => sum + Number(r.amount), 0)
-
-      // 计算上月数据用于对比
-      const lastMonthRecords = allRecords.filter(r => {
-        const recordDate = new Date(r.date)
-        return recordDate.getFullYear() === lastMonthYear &&
-               recordDate.getMonth() + 1 === lastMonth
-      })
-
-      const lastMonthIncome = lastMonthRecords
-        .filter(r => r.recordType === 'income')
-        .reduce((sum, r) => sum + Number(r.amount), 0)
-
-      const lastMonthExpense = lastMonthRecords
-        .filter(r => r.recordType === 'expense')
-        .reduce((sum, r) => sum + Number(r.amount), 0)
-
-      // 计算变化
-      this.balanceChange = (this.monthIncome - this.monthExpense) - (lastMonthIncome - lastMonthExpense)
-      this.incomeGrowth = lastMonthIncome > 0
-        ? Math.round(((this.monthIncome - lastMonthIncome) / lastMonthIncome) * 100) : 0
-      this.expenseGrowth = lastMonthExpense > 0
-        ? Math.round(((this.monthExpense - lastMonthExpense) / lastMonthExpense) * 100) : 0
-
-      // 计算储蓄率
-      this.savingRate = this.monthIncome > 0
-        ? Math.round(((this.monthIncome - this.monthExpense) / this.monthIncome) * 100) : 0
-
-      const lastMonthSavingRate = lastMonthIncome > 0
-        ? Math.round(((lastMonthIncome - lastMonthExpense) / lastMonthIncome) * 100) : 0
-
-      this.savingRateChange = this.savingRate - lastMonthSavingRate
-    },
-
-    prepareChartData() {
-      const now = new Date()
-      const currentYear = now.getFullYear()
-      const allRecords = this.getAllRecords()
-
-      // 生成过去12个月的数据
-      this.chartData = Array.from({ length: 12 }, (_, i) => {
-        const date = new Date(currentYear, now.getMonth() - i, 1)
-        const year = date.getFullYear()
-        const month = date.getMonth() + 1
-
-        const monthRecords = allRecords.filter(r => {
-          const recordDate = new Date(r.date)
-          return recordDate.getFullYear() === year &&
-                 recordDate.getMonth() + 1 === month
+        // 分类统计
+        const categoryMap = {}
+        data.recentRecords.forEach(r => {
+          if (r.type === 'expense') {
+            categoryMap[r.category] = (categoryMap[r.category] || 0) + Number(r.amount)
+          }
         })
+        this.expenseByCategory = Object.entries(categoryMap).map(([name, value]) => ({ name, value }))
 
-        const income = monthRecords
-          .filter(r => r.recordType === 'income')
-          .reduce((sum, r) => sum + Number(r.amount), 0)
-
-        const expense = monthRecords
-          .filter(r => r.recordType === 'expense')
-          .reduce((sum, r) => sum + Number(r.amount), 0)
-
-        return {
-          month: `${year}-${month.toString().padStart(2, '0')}`,
-          income,
-          expense,
-          balance: income - expense
-        }
-      }).reverse()
+        // 月度趋势数据
+        const recordsAll = await listFinanceRecords({ limit: 1000, page: 1 })
+        const trendMap = {}
+        recordsAll.records.forEach(r => {
+          const ym = r.date.slice(0, 7)
+          if (!trendMap[ym]) trendMap[ym] = { income: 0, expense: 0 }
+          trendMap[ym][r.type] += Number(r.amount)
+        })
+        this.chartData = Object.entries(trendMap).sort((a, b) => a[0] > b[0] ? 1 : -1).map(([month, v]) => ({ month, income: v.income, expense: v.expense, balance: v.income - v.expense }))
+      } catch (err) {
+        console.error('加载概览失败', err)
+        this.$message.error('加载概览失败')
+      }
     },
-
-    calcExpenseByCategory() {
-      const now = new Date()
-      const currentMonth = now.getMonth() + 1
-      const currentYear = now.getFullYear()
-
-      const allRecords = this.getAllRecords()
-      const currentMonthExpenses = allRecords.filter(r => {
-        const recordDate = new Date(r.date)
-        return r.recordType === 'expense' &&
-               recordDate.getFullYear() === currentYear &&
-               recordDate.getMonth() + 1 === currentMonth
-      })
-
-      const categoryStats = {}
-      currentMonthExpenses.forEach(record => {
-        const category = record.category || '其他'
-        categoryStats[category] = (categoryStats[category] || 0) + Number(record.amount)
-      })
-
-      this.expenseByCategory = Object.entries(categoryStats)
-        .map(([name, value]) => ({ name, value }))
-        .sort((a, b) => b.value - a.value)
-    },
-
-    loadRecentRecords() {
-      const allRecords = this.getAllRecords()
-      this.recentRecords = allRecords
-        .sort((a, b) => new Date(b.date) - new Date(a.date))
-        .slice(0, 10)
-    },
-
-    getAllRecords() {
-      // 统一使用financeRecords作为数据存储键名
-      const records = localStorage.getItem('financeRecords')
-      return records ? JSON.parse(records) : []
-    },
-
     quickRecord(type) {
       this.quickRecordType = type
       this.quickRecordVisible = true
     },
-
     handleRecordSuccess() {
-      this.loadData()
-      this.$message.success('记录添加成功')
+      this.loadOverview()
     },
-
-    exportData() {
-      const allRecords = this.getAllRecords()
-      const csvContent = this.convertToCSV(allRecords)
-      this.downloadCSV(csvContent, `财务记录_${new Date().toISOString().split('T')[0]}.csv`)
-    },
-
-    convertToCSV(data) {
-      if (!data.length) return ''
-
-      const headers = ['日期', '类型', '分类', '金额', '备注']
-      const rows = data.map(record => [
-        record.date,
-        record.recordType === 'income' ? '收入' : '支出',
-        record.category,
-        record.amount,
-        record.description
-      ])
-
-      return [headers, ...rows]
-        .map(row => row.map(field => `"${field}"`).join(','))
-        .join('\n')
-    },
-
-    downloadCSV(content, filename) {
-      const blob = new Blob(['\uFEFF' + content], { type: 'text/csv;charset=utf-8;' })
-      const link = document.createElement('a')
-      if (link.download !== undefined) {
-        const url = URL.createObjectURL(blob)
-        link.setAttribute('href', url)
-        link.setAttribute('download', filename)
-        link.style.visibility = 'hidden'
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
+    async exportData() {
+      try {
+        const { records } = await listFinanceRecords({ page: 1, limit: 5000 })
+        const data = records.map(r => [r.date, r.type === 'income' ? '收入' : '支出', r.category, Number(r.amount), r.description || ''])
+        const header = ['日期', '类型', '分类', '金额', '备注']
+        export_json_to_excel({ header, data, filename: '财务记录_' + new Date().toISOString().slice(0, 10) })
+      } catch (err) {
+        console.error('导出失败', err)
+        this.$message.error('导出失败')
       }
     }
   }

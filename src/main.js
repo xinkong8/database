@@ -31,7 +31,7 @@ Vue.use(Element)
  * Currently MockJs will be used in the production environment,
  * please remove it before going online ! ! !
  */
-if (process.env.NODE_ENV === 'production') {
+if (process.env.VUE_APP_USE_MOCK === 'true') {
   const { mockXHR } = require('../mock')
   mockXHR()
 }

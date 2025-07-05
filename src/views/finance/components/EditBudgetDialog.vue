@@ -14,7 +14,6 @@
           format="yyyy年MM月"
           value-format="yyyy-MM"
           style="width: 100%"
-          :disabled="isEdit"
         />
       </el-form-item>
       <el-form-item label="分类" prop="category">
@@ -22,10 +21,9 @@
           v-model="form.category"
           placeholder="选择分类"
           style="width: 100%"
-          :disabled="isEdit"
         >
           <el-option
-            v-for="category in categories"
+            v-for="category in categoryOptions"
             :key="category"
             :label="category"
             :value="category"
@@ -119,6 +117,9 @@ export default {
     },
     dialogTitle() {
       return this.isEdit ? '编辑预算' : '新增预算'
+    },
+    categoryOptions() {
+      return this.categories
     }
   },
   watch: {

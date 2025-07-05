@@ -35,6 +35,8 @@
 
 <script>
 import ExpensePieChart from './ExpensePieChart.vue'
+import { listFinanceRecords, createFinanceRecord } from '@/api/finance'
+
 function formatDate(date) {
   if (!date) return ''
   const d = new Date(date)
@@ -58,20 +60,46 @@ export default {
         remark: ''
       },
       typeOptions,
-      expenseList: JSON.parse(localStorage.getItem('expenseList') || '[]')
+      expenseList: []
     }
   },
+  async mounted() {
+    await this.fetchExpenseList()
+  },
   methods: {
-    addExpense() {
+    async fetchExpenseList() {
+      try {
+        const { records } = await listFinanceRecords({ page: 1, limit: 100, type: 'expense' })
+        this.expenseList = records.map(r => ({
+          date: r.date,
+          type: r.category,
+          amount: Number(r.amount),
+          remark: r.description || ''
+        }))
+      } catch (err) {
+        console.error('加载支出记录失败', err)
+      }
+    },
+    async addExpense() {
       if (!this.form.date || !this.form.amount || !this.form.type) {
         this.$message.error('请填写完整信息')
         return
       }
-      const record = { ...this.form, date: formatDate(this.form.date) }
-      this.expenseList.push(record)
-      localStorage.setItem('expenseList', JSON.stringify(this.expenseList))
-      this.form = { date: '', type: '', amount: null, remark: '' }
-      this.$message.success('添加成功')
+      try {
+        await createFinanceRecord({
+          date: formatDate(this.form.date),
+          category: this.form.type,
+          amount: this.form.amount,
+          description: this.form.remark,
+          type: 'expense'
+        })
+        this.$message.success('添加成功')
+        this.form = { date: '', type: '', amount: null, remark: '' }
+        await this.fetchExpenseList()
+      } catch (err) {
+        console.error('添加支出失败', err)
+        this.$message.error('添加失败')
+      }
     }
   }
 }
