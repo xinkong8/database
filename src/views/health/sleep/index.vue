@@ -97,11 +97,11 @@
 
         <el-table-column prop="duration" label="睡眠时长" width="120">
           <template slot-scope="scope">
-            <span class="duration-value">{{ scope.row.duration }} 小时</span>
+            <span class="duration-value">{{ scope.row.duration || '--' }} 小时</span>
           </template>
         </el-table-column>
 
-        <el-table-column prop="quality" label="睡眠质量" width="120">
+        <el-table-column prop="quality" label="睡眠质量" width="140">
           <template slot-scope="scope">
             <el-rate
               v-model="scope.row.quality"
@@ -113,9 +113,9 @@
           </template>
         </el-table-column>
 
-        <el-table-column prop="notes" label="备注" min-width="200">
+        <el-table-column prop="notes" label="备注" min-width="220">
           <template slot-scope="scope">
-            <span class="notes-text">{{ scope.row.notes || '无备注' }}</span>
+            <span class="notes-text">{{ scope.row.notes || '—' }}</span>
           </template>
         </el-table-column>
 
@@ -236,36 +236,8 @@ export default {
         ]
       },
 
-      // 模拟数据
-      mockSleepRecords: [
-        {
-          id: 1,
-          date: '2024-01-15',
-          bedtime: '23:30',
-          wakeup: '07:00',
-          duration: 7.5,
-          quality: 4,
-          notes: '睡眠质量不错，做了个好梦'
-        },
-        {
-          id: 2,
-          date: '2024-01-14',
-          bedtime: '00:15',
-          wakeup: '07:30',
-          duration: 7.25,
-          quality: 3,
-          notes: '有点失眠，半夜醒了一次'
-        },
-        {
-          id: 3,
-          date: '2024-01-13',
-          bedtime: '22:45',
-          wakeup: '06:45',
-          duration: 8,
-          quality: 5,
-          notes: '睡得很香，精神状态很好'
-        }
-      ]
+      // 数据来自 store
+      placeholder: null
     }
   },
   computed: {
@@ -276,7 +248,7 @@ export default {
     },
 
     filteredRecords() {
-      let records = this.mockSleepRecords
+      let records = this.sleepRecords
       if (this.searchText) {
         records = records.filter(record =>
           (record.notes && record.notes.includes(this.searchText)) ||
@@ -287,27 +259,39 @@ export default {
     },
 
     averageSleep() {
-      if (this.mockSleepRecords.length === 0) return '0.0'
-      const total = this.mockSleepRecords.reduce((sum, record) => sum + record.duration, 0)
-      return (total / this.mockSleepRecords.length).toFixed(1)
+      if (this.sleepRecords.length === 0) return '0.0'
+      const total = this.sleepRecords.reduce((sum, record) => sum + record.duration, 0)
+      return (total / this.sleepRecords.length).toFixed(1)
     },
 
     averageQuality() {
-      if (this.mockSleepRecords.length === 0) return '0.0'
-      const total = this.mockSleepRecords.reduce((sum, record) => sum + record.quality, 0)
-      return (total / this.mockSleepRecords.length).toFixed(1)
+      if (this.sleepRecords.length === 0) return '0.0'
+      const total = this.sleepRecords.reduce((sum, record) => sum + record.quality, 0)
+      return (total / this.sleepRecords.length).toFixed(1)
     },
 
     averageBedtime() {
-      if (this.mockSleepRecords.length === 0) return '--:--'
-      // 简化处理，直接返回最常见的就寝时间
-      return '23:15'
+      if (this.sleepRecords.length === 0) return '--:--'
+      const totalMinutes = this.sleepRecords.reduce((sum, r) => {
+        const [h, m] = String(r.bedtime || '00:00').split(':').map(Number)
+        return sum + h * 60 + m
+      }, 0)
+      const avg = Math.round(totalMinutes / this.sleepRecords.length)
+      const h = String(Math.floor(avg / 60)).padStart(2, '0')
+      const m = String(avg % 60).padStart(2, '0')
+      return `${h}:${m}`
     },
 
     averageWakeup() {
-      if (this.mockSleepRecords.length === 0) return '--:--'
-      // 简化处理，直接返回最常见的起床时间
-      return '07:05'
+      if (this.sleepRecords.length === 0) return '--:--'
+      const totalMinutes = this.sleepRecords.reduce((sum, r) => {
+        const [h, m] = String(r.wakeup || '00:00').split(':').map(Number)
+        return sum + h * 60 + m
+      }, 0)
+      const avg = Math.round(totalMinutes / this.sleepRecords.length)
+      const h = String(Math.floor(avg / 60)).padStart(2, '0')
+      const m = String(avg % 60).padStart(2, '0')
+      return `${h}:${m}`
     }
   },
 
@@ -325,7 +309,7 @@ export default {
 
     async loadSleepRecords() {
       try {
-        // await this.fetchSleepRecords()
+        await this.fetchSleepRecords()
       } catch (error) {
         this.$message.error('加载睡眠记录失败')
       }
@@ -336,15 +320,15 @@ export default {
         if (valid) {
           this.submitting = true
           try {
-            // 计算睡眠时长
+            // 计算睡眠时长并写入表单
             const duration = this.calculateDuration(this.sleepForm.bedtime, this.sleepForm.wakeup)
-            console.log('睡眠时长:', duration, '小时')
+            this.sleepForm.duration = duration
 
             if (this.isEditing) {
-              // await this.updateSleepRecord({ id: this.sleepForm.id, data: this.sleepForm })
+              await this.updateSleepRecord({ id: this.sleepForm.id, data: this.sleepForm })
               this.$message.success('更新成功')
             } else {
-              // await this.createSleepRecord(this.sleepForm)
+              await this.createSleepRecord(this.sleepForm)
               this.$message.success('添加成功')
             }
 
@@ -374,7 +358,7 @@ export default {
           type: 'warning'
         })
 
-        // await this.removeSleepRecord(record.id)
+        await this.removeSleepRecord(record.id)
         this.$message.success('删除成功')
         this.loadSleepRecords()
       } catch (error) {
@@ -415,7 +399,8 @@ export default {
     },
 
     formatDate(date) {
-      return date
+      if (!date) return ''
+      return String(date).slice(0, 10)
     }
   }
 }

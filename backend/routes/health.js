@@ -19,7 +19,7 @@ router.get('/', authenticateToken, async (req, res) => {
     const offset = (page - 1) * limit;
 
     // 构建查询条件
-    let sql = 'SELECT id, type, value, unit, notes, date, created_at, updated_at FROM health_records WHERE user_id = ?';
+    let sql = 'SELECT id, type, value, height, unit, notes, date, created_at, updated_at FROM health_records WHERE user_id = ?';
     let params = [userId];
 
     if (type && ['weight', 'sleep', 'exercise', 'water', 'mood'].includes(type)) {
@@ -133,7 +133,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 router.post('/', authenticateToken, async (req, res) => {
   try {
     const userId = req.userId;
-    const { type, value, unit, notes, date } = req.body;
+    const { type, value, unit, notes, date, height } = req.body;
 
     // 参数验证
     if (!type || !value || !date) {
@@ -158,6 +158,14 @@ router.post('/', authenticateToken, async (req, res) => {
       });
     }
 
+    // 若体重记录且包含 height，校验
+    if (type === 'weight' && height !== undefined) {
+      const hNum = parseFloat(height)
+      if (isNaN(hNum) || hNum < 30 || hNum > 260) {
+        return res.status(400).json({ success: false, message: '身高必须在30-260cm之间' })
+      }
+    }
+
     // 根据类型设置默认单位
     let defaultUnit = unit;
     if (!unit) {
@@ -173,8 +181,8 @@ router.post('/', authenticateToken, async (req, res) => {
 
     // 创建记录
     const result = await dbRun(
-      'INSERT INTO health_records (user_id, type, value, unit, notes, date) VALUES (?, ?, ?, ?, ?, ?)',
-      [userId, type, numValue, defaultUnit, notes || null, date]
+      'INSERT INTO health_records (user_id, type, value, height, unit, notes, date) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [userId, type, numValue, (type === 'weight' ? height || null : null), defaultUnit, notes || null, date]
     );
 
     // 获取创建的记录
@@ -203,7 +211,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const userId = req.userId;
     const recordId = parseInt(req.params.id);
-    const { type, value, unit, notes, date } = req.body;
+    const { type, value, unit, notes, date, height } = req.body;
 
     // 检查记录是否存在且属于当前用户
     const existingRecord = await dbGet(
@@ -258,6 +266,15 @@ router.put('/:id', authenticateToken, async (req, res) => {
     if (date !== undefined) {
       updateSql += ', date = ?';
       updateParams.push(date);
+    }
+
+    if (height !== undefined) {
+      const hNum = parseFloat(height)
+      if (isNaN(hNum) || hNum < 30 || hNum > 260) {
+        return res.status(400).json({ success: false, message: '身高必须在30-260cm之间' })
+      }
+      updateSql += ', height = ?'
+      updateParams.push(hNum)
     }
 
     if (updateParams.length === 0) {

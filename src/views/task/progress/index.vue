@@ -71,17 +71,39 @@
     <!-- 进度图表区域 -->
     <el-row :gutter="20" style="margin-bottom: 24px;">
       <el-col :xs="24" :lg="16">
-        <el-card class="chart-card">
+        <el-card class="projects-progress">
           <div slot="header" class="card-header">
-            <span>完成趋势</span>
-            <el-radio-group v-model="trendPeriod" size="small">
-              <el-radio-button label="week">本周</el-radio-button>
-              <el-radio-button label="month">本月</el-radio-button>
-              <el-radio-button label="quarter">本季度</el-radio-button>
-            </el-radio-group>
+            <span>项目进度详情</span>
+            <el-button type="text" @click="$router.push('/task/project')">查看全部项目</el-button>
           </div>
-          <div class="trend-chart">
-            <canvas ref="trendChart" width="400" height="200" />
+          <div v-if="projects.length === 0" class="empty-state">
+            <i class="el-icon-folder-opened" />
+            <p>暂无项目</p>
+            <el-button type="primary" @click="$router.push('/task/project')">创建项目</el-button>
+          </div>
+          <div v-else class="projects-list">
+            <div v-for="project in projects" :key="project.id" class="project-progress-item">
+              <div class="project-info">
+                <div class="project-header">
+                  <div class="project-color" :style="{ backgroundColor: project.color }" />
+                  <span class="project-name">{{ project.name }}</span>
+                  <el-tag :type="getProjectStatusType(project.status)" size="mini">
+                    {{ getProjectStatusText(project.status) }}
+                  </el-tag>
+                </div>
+                <div class="project-stats">
+                  <span class="stat">{{ getProjectTasks(project.id).length }} 个任务</span>
+                  <span class="stat">{{ getCompletedProjectTasks(project.id).length }} 已完成</span>
+                  <span class="stat">{{ getProjectTasks(project.id).length - getCompletedProjectTasks(project.id).length }} 待完成</span>
+                </div>
+              </div>
+              <div class="project-progress-bar">
+                <div class="progress-info">
+                  <span class="progress-percentage">{{ getProjectProgress(project.id) }}%</span>
+                </div>
+                <el-progress :percentage="getProjectProgress(project.id)" :color="project.color" :stroke-width="8" :show-text="false" />
+              </div>
+            </div>
           </div>
         </el-card>
       </el-col>
@@ -116,54 +138,6 @@
         </el-card>
       </el-col>
     </el-row>
-
-    <!-- 项目进度详情 -->
-    <el-card class="projects-progress" style="margin-bottom: 24px;">
-      <div slot="header" class="card-header">
-        <span>项目进度详情</span>
-        <el-button type="text" @click="$router.push('/task/project')">查看全部项目</el-button>
-      </div>
-      <div v-if="projects.length === 0" class="empty-state">
-        <i class="el-icon-folder-opened" />
-        <p>暂无项目</p>
-        <el-button type="primary" @click="$router.push('/task/project')">创建项目</el-button>
-      </div>
-      <div v-else class="projects-list">
-        <div v-for="project in projects" :key="project.id" class="project-progress-item">
-          <div class="project-info">
-            <div class="project-header">
-              <div class="project-color" :style="{ backgroundColor: project.color }" />
-              <span class="project-name">{{ project.name }}</span>
-              <el-tag :type="getProjectStatusType(project.status)" size="mini">
-                {{ getProjectStatusText(project.status) }}
-              </el-tag>
-            </div>
-            <div class="project-stats">
-              <span class="stat">
-                {{ getProjectTasks(project.id).length }} 个任务
-              </span>
-              <span class="stat">
-                {{ getCompletedProjectTasks(project.id).length }} 已完成
-              </span>
-              <span class="stat">
-                {{ getProjectTasks(project.id).length - getCompletedProjectTasks(project.id).length }} 待完成
-              </span>
-            </div>
-          </div>
-          <div class="project-progress-bar">
-            <div class="progress-info">
-              <span class="progress-percentage">{{ getProjectProgress(project.id) }}%</span>
-            </div>
-            <el-progress
-              :percentage="getProjectProgress(project.id)"
-              :color="project.color"
-              :stroke-width="8"
-              :show-text="false"
-            />
-          </div>
-        </div>
-      </div>
-    </el-card>
 
     <!-- 优先级分析 -->
     <el-card class="priority-analysis">

@@ -34,6 +34,7 @@ app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/finance', require('./routes/finance'));
 app.use('/api/tasks', require('./routes/tasks'));
 app.use('/api/health', require('./routes/health'));
+app.use('/api/projects', require('./routes/projects'));
 
 // 404处理
 app.use('*', (req, res) => {

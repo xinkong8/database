@@ -171,6 +171,7 @@
           <div class="tasks-stats">
             <span>共 {{ categoryTasks.length }} 个任务</span>
           </div>
+          <el-button size="small" type="primary" @click="addTaskToCategory">添加任务</el-button>
         </div>
 
         <div v-if="categoryTasks.length === 0" class="no-tasks">
@@ -188,6 +189,7 @@
             <el-checkbox v-model="task.done" @change="toggleTask(task.id)" />
             <div class="task-content">
               <span class="task-text" :class="{ done: task.done }">{{ task.text }}</span>
+              <span v-if="task.note" class="task-note">{{ task.note }}</span>
               <div class="task-meta">
                 <el-tag v-if="task.priority !== 'medium'" size="mini" :type="getPriorityType(task.priority)">
                   {{ getPriorityLabel(task.priority) }}
@@ -204,6 +206,41 @@
         </div>
       </div>
     </el-dialog>
+
+    <!-- 添加任务对话框 -->
+    <el-dialog title="添加任务" :visible.sync="showAddTaskDialog" width="600px">
+      <el-form :model="newTask" label-width="100px">
+        <el-form-item label="任务内容" required>
+          <el-input v-model="newTask.text" placeholder="请输入任务内容" maxlength="200" show-word-limit />
+        </el-form-item>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="优先级">
+              <el-select v-model="newTask.priority" style="width: 100%;">
+                <el-option v-for="p in priorities" :key="p.value" :label="p.label" :value="p.value" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="项目">
+              <el-select v-model="newTask.project" clearable style="width: 100%;">
+                <el-option v-for="proj in allProjects" :key="proj.id" :label="proj.name" :value="proj.id" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="备注">
+          <el-input v-model="newTask.note" type="textarea" :rows="2" maxlength="200" show-word-limit />
+        </el-form-item>
+        <el-form-item label="截止日期">
+          <el-date-picker v-model="newTask.dueDate" type="date" placeholder="选择截止日期" style="width: 100%;" />
+        </el-form-item>
+      </el-form>
+      <div slot="footer">
+        <el-button @click="showAddTaskDialog = false">取消</el-button>
+        <el-button type="primary" @click="handleAddTask">确定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -217,6 +254,7 @@ export default {
       showDialog: false,
       showAddDialog: false,
       showTasksDialog: false,
+      showAddTaskDialog: false,
       isEditing: false,
       selectedCategory: null,
       currentCategory: {
@@ -254,6 +292,19 @@ export default {
         '#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#909399',
         '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
         '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'
+      ],
+      newTask: {
+        text: '',
+        priority: 'medium',
+        project: null,
+        note: '',
+        dueDate: null
+      },
+      priorities: [
+        { value: 'low', label: '低' },
+        { value: 'medium', label: '中' },
+        { value: 'high', label: '高' },
+        { value: 'urgent', label: '紧急' }
       ]
     }
   },
@@ -288,12 +339,13 @@ export default {
     }
   },
   methods: {
-    ...mapActions('task', [
-      'addCategory',
-      'updateCategory',
-      'deleteCategory',
-      'toggleTodo'
-    ]),
+    ...mapActions('task', {
+      addCategory: 'addCategory',
+      addTodoAction: 'addTodo',
+      updateCategory: 'updateCategory',
+      deleteCategory: 'deleteCategory',
+      toggleTodo: 'toggleTodo'
+    }),
     viewCategoryTasks(category) {
       this.selectedCategory = category
       this.showTasksDialog = true
@@ -383,10 +435,11 @@ export default {
       })
     },
     addTaskToCategory() {
-      this.$router.push({
-        path: '/task/todo',
-        query: { category: this.selectedCategory.id }
-      })
+      this.resetNewTask()
+      if (this.selectedCategory) {
+        this.newTask.category = this.selectedCategory.id
+      }
+      this.showAddTaskDialog = true
     },
     editTask(task) {
       this.$router.push({
@@ -427,6 +480,25 @@ export default {
         name: '',
         icon: 'component',
         color: '#409EFF'
+      }
+    },
+    async handleAddTask() {
+      try {
+        await this.addTodoAction(this.newTask)
+        this.$message.success('任务添加成功')
+        this.showAddTaskDialog = false
+        this.resetNewTask()
+      } catch (error) {
+        this.$message.error('任务添加失败')
+      }
+    },
+    resetNewTask() {
+      this.newTask = {
+        text: '',
+        priority: 'medium',
+        project: null,
+        note: '',
+        dueDate: null
       }
     }
   }
@@ -688,6 +760,12 @@ export default {
             text-decoration: line-through;
             color: #909399;
           }
+        }
+
+        .task-note {
+          font-size: 12px;
+          color: #909399;
+          margin-bottom: 4px;
         }
 
         .task-meta {

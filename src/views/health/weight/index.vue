@@ -39,8 +39,9 @@
           <div class="stats-icon">
             <i class="el-icon-aim" />
           </div>
-          <div class="stats-content">
+          <div class="stats-content" style="position: relative;">
             <h3>目标体重</h3>
+            <el-button class="edit-target" type="text" icon="el-icon-edit" @click="openTargetDialog" />
             <p class="value">{{ targetWeight }} kg</p>
           </div>
         </div>
@@ -113,7 +114,8 @@
 
         <el-table-column prop="bmi" label="BMI" width="80">
           <template slot-scope="scope">
-            <el-tag :type="getBmiType(scope.row.bmi)">{{ scope.row.bmi }}</el-tag>
+            <el-tag v-if="scope.row.bmi" :type="getBmiType(scope.row.bmi)">{{ scope.row.bmi }}</el-tag>
+            <span v-else>--</span>
           </template>
         </el-table-column>
 
@@ -216,6 +218,34 @@
         </el-button>
       </div>
     </el-dialog>
+
+    <!-- 设置目标体重对话框 -->
+    <el-dialog
+      title="设置目标体重"
+      :visible.sync="showTargetDialog"
+      width="600px"
+    >
+      <el-form ref="targetForm" :model="targetForm" label-width="120px">
+        <el-form-item label="目标体重 (kg)" prop="weight">
+          <el-input-number
+            v-model="targetForm.weight"
+            :precision="1"
+            :step="0.1"
+            :min="30"
+            :max="200"
+            style="width: 100%;"
+            placeholder="请输入目标体重"
+          />
+        </el-form-item>
+      </el-form>
+
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="showTargetDialog = false">取消</el-button>
+        <el-button type="primary" @click="saveTargetWeight">
+          保存
+        </el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -300,19 +330,25 @@ export default {
           change: -0.1,
           notes: '跑步30分钟'
         }
-      ]
+      ],
+
+      // 设置目标体重对话框
+      showTargetDialog: false,
+      targetForm: {
+        weight: null
+      },
+      placeholder: null
     }
   },
   computed: {
-    ...mapGetters(['latestWeight']),
-    ...mapGetters('health', ['weightRecords', 'weightLoading']),
+    ...mapGetters('health', ['weightRecords', 'weightLoading', 'latestWeight', 'targetWeight']),
 
     dialogTitle() {
       return this.isEditing ? '编辑体重记录' : '添加体重记录'
     },
 
     filteredRecords() {
-      let records = this.mockWeightRecords // 使用模拟数据
+      let records = this.weightRecords
       if (this.searchText) {
         records = records.filter(record =>
           (record.notes && record.notes.includes(this.searchText)) ||
@@ -323,31 +359,27 @@ export default {
     },
 
     currentWeight() {
-      return this.mockWeightRecords.length > 0 ? this.mockWeightRecords[0].weight : '--'
+      return this.weightRecords.length > 0 ? this.weightRecords[0].weight : '--'
     },
 
     weightChange() {
-      if (this.mockWeightRecords.length < 2) return '--'
-      const current = this.mockWeightRecords[0].weight
-      const previous = this.mockWeightRecords[1].weight
+      if (this.weightRecords.length < 2) return '--'
+      const current = this.weightRecords[0].weight
+      const previous = this.weightRecords[1].weight
       const change = current - previous
       return change > 0 ? `+${change.toFixed(1)}kg` : `${change.toFixed(1)}kg`
     },
 
     weightChangeClass() {
-      if (this.mockWeightRecords.length < 2) return ''
-      const current = this.mockWeightRecords[0].weight
-      const previous = this.mockWeightRecords[1].weight
+      if (this.weightRecords.length < 2) return ''
+      const current = this.weightRecords[0].weight
+      const previous = this.weightRecords[1].weight
       return current > previous ? 'increase' : 'decrease'
     },
 
-    targetWeight() {
-      return 65.0 // 可以从设置中获取
-    },
-
     bmiValue() {
-      if (this.mockWeightRecords.length === 0) return '--'
-      return this.mockWeightRecords[0].bmi
+      if (this.weightRecords.length === 0) return '--'
+      return this.weightRecords[0].bmi
     }
   },
 
@@ -361,13 +393,14 @@ export default {
       'fetchWeightRecords',
       'createWeightRecord',
       'updateWeightRecord',
-      'removeWeightRecord'
+      'removeWeightRecord',
+      'setTargetWeight'
     ]),
 
     async loadWeightRecords() {
       try {
-        // await this.fetchWeightRecords()
-        this.pagination.total = this.mockWeightRecords.length
+        await this.fetchWeightRecords()
+        this.pagination.total = this.weightRecords.length
         this.updateChart()
       } catch (error) {
         this.$message.error('加载体重记录失败')
@@ -386,7 +419,8 @@ export default {
     },
 
     updateChart() {
-      const data = this.mockWeightRecords.slice().reverse()
+      const data = this.weightRecords.slice().reverse()
+      const dates = data.map(item => String(item.date).split('T')[0].slice(5)) // MM-DD
       const option = {
         title: {
           text: '体重变化趋势',
@@ -399,16 +433,16 @@ export default {
         tooltip: {
           trigger: 'axis',
           formatter: function(params) {
-            const data = params[0]
-            return `日期: ${data.axisValue}<br/>体重: ${data.value} kg`
+            const d = params[0]
+            return `日期: ${d.axisValue}<br/>体重: ${d.value} kg`
           }
         },
         xAxis: {
           type: 'category',
-          data: data.map(item => item.date),
+          data: dates,
           axisLabel: {
             formatter: function(value) {
-              return value.slice(5) // 只显示月-日
+              return value // 已是 MM-DD
             }
           }
         },
@@ -459,20 +493,34 @@ export default {
       this.updateChart()
     },
 
+    openTargetDialog() {
+      this.targetForm.weight = this.targetWeight
+      this.showTargetDialog = true
+    },
+
+    saveTargetWeight() {
+      if (!this.targetForm.weight || this.targetForm.weight <= 0) {
+        this.$message.error('请输入有效目标体重')
+        return
+      }
+      this.$store.dispatch('health/setTargetWeight', parseFloat(this.targetForm.weight))
+      this.$message.success('目标体重已更新')
+      this.showTargetDialog = false
+    },
+
     submitForm() {
       this.$refs.weightForm.validate(async(valid) => {
         if (valid) {
           this.submitting = true
           try {
-            // 计算BMI值
             const bmi = this.calculateBMI(this.weightForm.weight, this.weightForm.height)
-            console.log('BMI计算结果:', bmi)
+            this.weightForm.bmi = bmi
 
             if (this.isEditing) {
-              // await this.updateWeightRecord({ id: this.weightForm.id, data: this.weightForm })
+              await this.updateWeightRecord({ id: this.weightForm.id, data: this.weightForm })
               this.$message.success('更新成功')
             } else {
-              // await this.createWeightRecord(this.weightForm)
+              await this.createWeightRecord(this.weightForm)
               this.$message.success('添加成功')
             }
 
@@ -502,7 +550,7 @@ export default {
           type: 'warning'
         })
 
-        // await this.removeWeightRecord(record.id)
+        await this.removeWeightRecord(record.id)
         this.$message.success('删除成功')
         this.loadWeightRecords()
       } catch (error) {
@@ -541,7 +589,14 @@ export default {
     },
 
     formatDate(date) {
-      return date
+      if (!date) return ''
+      let str = ''
+      if (date instanceof Date) {
+        str = date.toISOString().slice(0, 10) // YYYY-MM-DD
+      } else {
+        str = String(date).slice(0, 10)
+      }
+      return str.slice(5) // MM-DD
     },
 
     handleSortChange({ column, prop, order }) {
@@ -607,12 +662,20 @@ export default {
 
       .stats-content {
         flex: 1;
+        position: relative;
 
         h3 {
           font-size: 14px;
           color: #909399;
           margin: 0 0 8px 0;
           font-weight: 500;
+        }
+
+        .edit-target {
+          position: absolute;
+          top: 0;
+          right: 0;
+          padding: 0;
         }
 
         .value {

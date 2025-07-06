@@ -33,12 +33,6 @@ const healthRouter = {
       component: () => import('@/views/health/sleep'),
       name: 'SleepMonitor',
       meta: { title: '睡眠监控', icon: 'el-icon-moon-night' }
-    },
-    {
-      path: 'metrics',
-      component: () => import('@/views/health/metrics'),
-      name: 'HealthMetrics',
-      meta: { title: '健康指标', icon: 'chart' }
     }
   ]
 }

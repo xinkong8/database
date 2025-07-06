@@ -4,8 +4,8 @@ import {
   updateWeightRecord,
   deleteWeightRecord,
   getExerciseRecords,
-  addExerciseRecord,
-  updateExerciseRecord,
+  addExerciseRecord as apiAddExerciseRecord,
+  updateExerciseRecord as apiUpdateExerciseRecord,
   deleteExerciseRecord,
   getExerciseTypes,
   getSleepRecords,
@@ -25,6 +25,9 @@ const state = {
   // 体重记录
   weightRecords: [],
   weightLoading: false,
+
+  // 目标体重
+  targetWeight: parseFloat(localStorage.getItem('targetWeight')) || 65.0,
 
   // 运动追踪
   exerciseRecords: [],
@@ -68,6 +71,12 @@ const mutations = {
   },
   SET_WEIGHT_LOADING: (state, loading) => {
     state.weightLoading = loading
+  },
+
+  // 设置目标体重
+  SET_TARGET_WEIGHT: (state, weight) => {
+    state.targetWeight = weight
+    localStorage.setItem('targetWeight', weight)
   },
 
   // 运动追踪相关mutations
@@ -159,8 +168,27 @@ const actions = {
     commit('SET_WEIGHT_LOADING', true)
     try {
       const response = await getWeightRecords(params)
-      commit('SET_WEIGHT_RECORDS', response.data)
-      return response.data
+      const list = Array.isArray(response.records) ? response.records : []
+      // 先按日期降序排序
+      list.sort((a, b) => new Date(b.date) - new Date(a.date))
+      const mapped = list.map((r, idx, arr) => {
+        const weight = parseFloat(r.value)
+        const height = r.height ? parseFloat(r.height) : null
+        const bmi = height ? Math.round((weight / ((height / 100) ** 2)) * 10) / 10 : null
+        const prevWeight = idx < arr.length - 1 ? parseFloat(arr[idx + 1].value) : null
+        const change = prevWeight != null ? Math.round((weight - prevWeight) * 10) / 10 : null
+        return {
+          id: r.id,
+          date: r.date,
+          weight,
+          height,
+          bmi,
+          change,
+          notes: r.notes || ''
+        }
+      })
+      commit('SET_WEIGHT_RECORDS', mapped)
+      return mapped
     } catch (error) {
       commit('SET_ERROR', error.message)
       throw error
@@ -172,8 +200,14 @@ const actions = {
   async createWeightRecord({ commit }, data) {
     try {
       const response = await addWeightRecord(data)
-      commit('ADD_WEIGHT_RECORD', response.data)
-      return response.data
+      const mapped = {
+        id: response.id,
+        date: response.date,
+        weight: parseFloat(response.value),
+        notes: response.notes
+      }
+      commit('ADD_WEIGHT_RECORD', mapped)
+      return mapped
     } catch (error) {
       commit('SET_ERROR', error.message)
       throw error
@@ -183,8 +217,14 @@ const actions = {
   async updateWeightRecord({ commit }, { id, data }) {
     try {
       const response = await updateWeightRecord(id, data)
-      commit('UPDATE_WEIGHT_RECORD', response.data)
-      return response.data
+      const mappedUpd = {
+        id: response.id,
+        date: response.date,
+        weight: parseFloat(response.value),
+        notes: response.notes
+      }
+      commit('UPDATE_WEIGHT_RECORD', mappedUpd)
+      return mappedUpd
     } catch (error) {
       commit('SET_ERROR', error.message)
       throw error
@@ -206,8 +246,27 @@ const actions = {
     commit('SET_EXERCISE_LOADING', true)
     try {
       const response = await getExerciseRecords(params)
-      commit('SET_EXERCISE_RECORDS', response.data)
-      return response.data
+      const raw = Array.isArray(response.records) ? response.records : []
+      const mapped = raw.map(r => {
+        const duration = parseInt(r.value)
+        let extra = {}
+        try {
+          extra = JSON.parse(r.notes || '{}')
+        } catch (e) {
+          /* ignore malformed JSON */
+        }
+        return {
+          id: r.id,
+          date: r.date,
+          type: extra.exerciseType || '其他',
+          duration,
+          calories: extra.calories || null,
+          intensity: extra.intensity || 0,
+          notes: extra.remark || ''
+        }
+      })
+      commit('SET_EXERCISE_RECORDS', mapped)
+      return mapped
     } catch (error) {
       commit('SET_ERROR', error.message)
       throw error
@@ -229,9 +288,9 @@ const actions = {
 
   async createExerciseRecord({ commit }, data) {
     try {
-      const response = await addExerciseRecord(data)
-      commit('ADD_EXERCISE_RECORD', response.data)
-      return response.data
+      const record = await apiAddExerciseRecord(data)
+      commit('ADD_EXERCISE_RECORD', record)
+      return record
     } catch (error) {
       commit('SET_ERROR', error.message)
       throw error
@@ -240,9 +299,9 @@ const actions = {
 
   async updateExerciseRecord({ commit }, { id, data }) {
     try {
-      const response = await updateExerciseRecord(id, data)
-      commit('UPDATE_EXERCISE_RECORD', response.data)
-      return response.data
+      const record = await apiUpdateExerciseRecord(id, data)
+      commit('UPDATE_EXERCISE_RECORD', record)
+      return record
     } catch (error) {
       commit('SET_ERROR', error.message)
       throw error
@@ -264,8 +323,27 @@ const actions = {
     commit('SET_SLEEP_LOADING', true)
     try {
       const response = await getSleepRecords(params)
-      commit('SET_SLEEP_RECORDS', response.data)
-      return response.data
+      const raw = Array.isArray(response.records) ? response.records : []
+      const mapped = raw.map(r => {
+        const duration = parseFloat(r.value)
+        let extra = {}
+        try {
+          extra = JSON.parse(r.notes || '{}')
+        } catch (e) {
+          /* ignore malformed JSON */
+        }
+        return {
+          id: r.id,
+          date: r.date,
+          duration,
+          bedtime: extra.bedtime || '',
+          wakeup: extra.wakeup || '',
+          quality: extra.quality || 0,
+          notes: extra.remark || ''
+        }
+      })
+      commit('SET_SLEEP_RECORDS', mapped)
+      return mapped
     } catch (error) {
       commit('SET_ERROR', error.message)
       throw error
@@ -276,9 +354,9 @@ const actions = {
 
   async createSleepRecord({ commit }, data) {
     try {
-      const response = await addSleepRecord(data)
-      commit('ADD_SLEEP_RECORD', response.data)
-      return response.data
+      const record = await addSleepRecord(data)
+      commit('ADD_SLEEP_RECORD', record)
+      return record
     } catch (error) {
       commit('SET_ERROR', error.message)
       throw error
@@ -287,9 +365,9 @@ const actions = {
 
   async updateSleepRecord({ commit }, { id, data }) {
     try {
-      const response = await updateSleepRecord(id, data)
-      commit('UPDATE_SLEEP_RECORD', response.data)
-      return response.data
+      const record = await updateSleepRecord(id, data)
+      commit('UPDATE_SLEEP_RECORD', record)
+      return record
     } catch (error) {
       commit('SET_ERROR', error.message)
       throw error
@@ -394,10 +472,27 @@ const actions = {
     } finally {
       commit('SET_LOADING', false)
     }
+  },
+
+  // 修改目标体重
+  setTargetWeight({ commit }, weight) {
+    commit('SET_TARGET_WEIGHT', weight)
   }
 }
 
 const getters = {
+  // 体重记录列表及加载状态
+  weightRecords: state => state.weightRecords,
+  weightLoading: state => state.weightLoading,
+  // 运动记录及加载状态
+  exerciseRecords: state => state.exerciseRecords,
+  exerciseLoading: state => state.exerciseLoading,
+  // 睡眠记录及加载状态
+  sleepRecords: state => state.sleepRecords,
+  sleepLoading: state => state.sleepLoading,
+  // 健康指标及加载状态
+  healthMetrics: state => state.healthMetrics,
+  metricsLoading: state => state.metricsLoading,
   // 最新的体重记录
   latestWeight: state => {
     return state.weightRecords.length > 0 ? state.weightRecords[0] : null
@@ -422,7 +517,10 @@ const getters = {
   // 健康趋势
   healthTrend: state => {
     return state.trendsData || {}
-  }
+  },
+
+  // 目标体重
+  targetWeight: state => state.targetWeight
 }
 
 export default {

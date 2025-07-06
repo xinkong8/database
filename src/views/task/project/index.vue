@@ -256,12 +256,50 @@
             >
               <el-checkbox v-model="task.done" @change="toggleTask(task.id)" />
               <span class="task-text" :class="{ done: task.done }">{{ task.text }}</span>
+              <span v-if="task.note" class="task-note">{{ task.note }}</span>
               <el-tag v-if="task.priority !== 'medium'" size="mini" :type="getPriorityType(task.priority)">
                 {{ getPriorityLabel(task.priority) }}
               </el-tag>
             </div>
           </div>
         </div>
+      </div>
+    </el-dialog>
+
+    <!-- 添加任务对话框 -->
+    <el-dialog title="添加任务" :visible.sync="showAddTaskDialog" width="600px">
+      <el-form :model="newTask" label-width="100px">
+        <el-form-item label="任务内容" required>
+          <el-input v-model="newTask.text" placeholder="请输入任务内容" maxlength="200" show-word-limit />
+        </el-form-item>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="优先级">
+              <el-select v-model="newTask.priority" style="width: 100%;">
+                <el-option v-for="p in priorities" :key="p.value" :label="p.label" :value="p.value" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="分类">
+              <el-select v-model="newTask.category" style="width: 100%;">
+                <el-option v-for="c in categories" :key="c.id" :label="c.name" :value="c.id" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-form-item label="备注">
+          <el-input v-model="newTask.note" type="textarea" :rows="2" maxlength="200" show-word-limit placeholder="请输入备注" />
+        </el-form-item>
+
+        <el-form-item label="截止日期">
+          <el-date-picker v-model="newTask.dueDate" type="date" placeholder="选择截止日期" style="width: 100%;" />
+        </el-form-item>
+      </el-form>
+      <div slot="footer">
+        <el-button @click="showAddTaskDialog = false">取消</el-button>
+        <el-button type="primary" @click="handleAddTask">确定</el-button>
       </div>
     </el-dialog>
   </div>
@@ -278,6 +316,7 @@ export default {
       showDialog: false,
       showAddDialog: false,
       showDetailDialog: false,
+      showAddTaskDialog: false,
       isEditing: false,
       selectedProject: null,
       currentProject: {
@@ -285,6 +324,14 @@ export default {
         description: '',
         color: '#409EFF',
         status: 'active'
+      },
+      newTask: {
+        text: '',
+        priority: 'medium',
+        category: 1,
+        project: null,
+        dueDate: null,
+        note: ''
       },
       projectRules: {
         name: [
@@ -305,10 +352,15 @@ export default {
       'allProjects',
       'activeProjects',
       'allTodos',
-      'projectProgress'
+      'projectProgress',
+      'allCategories',
+      'priorities'
     ]),
     projects() {
       return this.allProjects
+    },
+    categories() {
+      return this.allCategories
     },
     filteredProjects() {
       if (this.statusFilter === 'all') {
@@ -327,6 +379,11 @@ export default {
         this.isEditing = false
         this.resetCurrentProject()
       }
+    },
+    showDialog(val) {
+      if (!val) {
+        this.showAddDialog = false
+      }
     }
   },
   methods: {
@@ -334,9 +391,11 @@ export default {
       'addProject',
       'updateProject',
       'deleteProject',
+      'fetchProjects',
       'addTodo',
       'toggleTodo'
     ]),
+    ...mapActions('task', { addTodoAction: 'addTodo' }),
     getTotalTasks() {
       return this.allTodos.length
     },
@@ -479,10 +538,34 @@ export default {
       })
     },
     addTaskToProject() {
-      this.$router.push({
-        path: '/task/todo',
-        query: { project: this.selectedProject.id }
-      })
+      // 打开添加任务弹窗并预设项目ID
+      this.resetNewTask()
+      this.newTask.project = this.selectedProject.id
+      this.showAddTaskDialog = true
+    },
+    async handleAddTask() {
+      if (!this.newTask.text.trim()) {
+        this.$message.warning('请输入任务内容')
+        return
+      }
+      try {
+        await this.addTodoAction(this.newTask)
+        this.$message.success('任务添加成功')
+        this.showAddTaskDialog = false
+        this.resetNewTask()
+      } catch (e) {
+        this.$message.error('任务添加失败')
+      }
+    },
+    resetNewTask() {
+      this.newTask = {
+        text: '',
+        priority: 'medium',
+        category: 1,
+        project: null,
+        dueDate: null,
+        note: ''
+      }
     },
     async toggleTask(taskId) {
       try {
@@ -503,6 +586,10 @@ export default {
         status: 'active'
       }
     }
+  },
+  created() {
+    // 初始化从后端拉取项目数据
+    this.fetchProjects()
   }
 }
 </script>
@@ -788,6 +875,13 @@ export default {
             text-decoration: line-through;
             color: #909399;
           }
+        }
+
+        .task-note {
+          display: block;
+          font-size: 12px;
+          color: #909399;
+          margin-top: 4px;
         }
       }
     }

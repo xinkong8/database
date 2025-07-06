@@ -83,11 +83,9 @@
           </template>
         </el-table-column>
 
-        <el-table-column prop="type" label="运动类型" width="120">
+        <el-table-column prop="type" label="运动类型" width="100">
           <template slot-scope="scope">
-            <el-tag :color="getExerciseColor(scope.row.type)">
-              {{ scope.row.type }}
-            </el-tag>
+            <span class="exercise-type">{{ scope.row.type }}</span>
           </template>
         </el-table-column>
 
@@ -99,25 +97,24 @@
 
         <el-table-column prop="calories" label="卡路里" width="100">
           <template slot-scope="scope">
-            <span class="calories-value">{{ scope.row.calories }}</span>
+            <span class="calories-value">{{ scope.row.calories || '--' }}</span>
           </template>
         </el-table-column>
 
-        <el-table-column prop="intensity" label="强度" width="100">
+        <el-table-column prop="intensity" label="强度" width="160">
           <template slot-scope="scope">
             <el-rate
               v-model="scope.row.intensity"
+              :max="5"
               disabled
-              show-score
               text-color="#ff9900"
-              score-template="{value}"
             />
           </template>
         </el-table-column>
 
-        <el-table-column prop="notes" label="备注" min-width="200">
+        <el-table-column prop="notes" label="备注" min-width="220">
           <template slot-scope="scope">
-            <span class="notes-text">{{ scope.row.notes || '无备注' }}</span>
+            <span class="notes-text">{{ scope.row.notes || '—' }}</span>
           </template>
         </el-table-column>
 
@@ -253,36 +250,8 @@ export default {
         ]
       },
 
-      // 模拟数据
-      mockExerciseRecords: [
-        {
-          id: 1,
-          date: '2024-01-15',
-          type: '跑步',
-          duration: 30,
-          intensity: 4,
-          calories: 300,
-          notes: '晨跑，天气不错'
-        },
-        {
-          id: 2,
-          date: '2024-01-14',
-          type: '健身',
-          duration: 60,
-          intensity: 5,
-          calories: 400,
-          notes: '力量训练，感觉很棒'
-        },
-        {
-          id: 3,
-          date: '2024-01-13',
-          type: '瑜伽',
-          duration: 45,
-          intensity: 2,
-          calories: 150,
-          notes: '放松身心'
-        }
-      ]
+      // 真实数据由 store 提供
+      placeholder: null
     }
   },
   computed: {
@@ -293,7 +262,7 @@ export default {
     },
 
     filteredRecords() {
-      let records = this.mockExerciseRecords
+      let records = this.exerciseRecords
       if (this.searchText) {
         records = records.filter(record =>
           record.type.includes(this.searchText) ||
@@ -306,30 +275,28 @@ export default {
     weeklyCount() {
       const oneWeekAgo = new Date()
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-      return this.mockExerciseRecords.filter(record =>
-        new Date(record.date) >= oneWeekAgo
-      ).length
+      return this.exerciseRecords.filter(r => new Date(r.date) >= oneWeekAgo).length
     },
 
     totalDuration() {
       const oneWeekAgo = new Date()
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-      return this.mockExerciseRecords
-        .filter(record => new Date(record.date) >= oneWeekAgo)
-        .reduce((sum, record) => sum + record.duration, 0)
+      return this.exerciseRecords
+        .filter(r => new Date(r.date) >= oneWeekAgo)
+        .reduce((s, r) => s + r.duration, 0)
     },
 
     totalCalories() {
       const oneWeekAgo = new Date()
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-      return this.mockExerciseRecords
-        .filter(record => new Date(record.date) >= oneWeekAgo)
-        .reduce((sum, record) => sum + (record.calories || 0), 0)
+      return this.exerciseRecords
+        .filter(r => new Date(r.date) >= oneWeekAgo)
+        .reduce((s, r) => s + (r.calories || 0), 0)
     },
 
     streakDays() {
       // 计算连续运动天数
-      const sortedRecords = this.mockExerciseRecords
+      const sortedRecords = this.exerciseRecords
         .map(record => new Date(record.date))
         .sort((a, b) => b - a)
 
@@ -371,7 +338,7 @@ export default {
 
     async loadExerciseRecords() {
       try {
-        // await this.fetchExerciseRecords()
+        await this.fetchExerciseRecords()
       } catch (error) {
         this.$message.error('加载运动记录失败')
       }
@@ -383,10 +350,10 @@ export default {
           this.submitting = true
           try {
             if (this.isEditing) {
-              // await this.updateExerciseRecord({ id: this.exerciseForm.id, data: this.exerciseForm })
+              await this.updateExerciseRecord({ id: this.exerciseForm.id, data: this.exerciseForm })
               this.$message.success('更新成功')
             } else {
-              // await this.createExerciseRecord(this.exerciseForm)
+              await this.createExerciseRecord(this.exerciseForm)
               this.$message.success('添加成功')
             }
 
@@ -416,7 +383,7 @@ export default {
           type: 'warning'
         })
 
-        // await this.removeExerciseRecord(record.id)
+        await this.removeExerciseRecord(record.id)
         this.$message.success('删除成功')
         this.loadExerciseRecords()
       } catch (error) {
@@ -455,7 +422,8 @@ export default {
     },
 
     formatDate(date) {
-      return date
+      if (!date) return ''
+      return String(date).slice(0, 10)
     }
   }
 }

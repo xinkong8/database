@@ -75,7 +75,7 @@
     <div v-if="selectedTodos.length > 0" class="batch-actions">
       <el-alert :title="`已选择 ${selectedTodos.length} 个任务`" type="info" show-icon>
         <template slot="default">
-          <el-button size="small" @click="batchComplete">批量完成</el-button>
+          <el-button size="small" :disabled="selectedUnfinishedCount === 0" @click="batchComplete">批量完成</el-button>
           <el-button size="small" @click="batchDelete">批量删除</el-button>
           <el-button size="small" @click="selectedTodos = []">取消选择</el-button>
         </template>
@@ -88,14 +88,6 @@
         <span>任务列表 ({{ filteredTodos.length }})</span>
         <div class="list-actions">
           <el-checkbox v-model="selectAll" @change="handleSelectAll">全选</el-checkbox>
-          <el-button
-            type="text"
-            icon="el-icon-refresh"
-            :disabled="completedTodos.length === 0"
-            @click="clearCompleted"
-          >
-            清除已完成
-          </el-button>
         </div>
       </div>
 
@@ -373,6 +365,12 @@ export default {
     },
     dialogTitle() {
       return this.isEditing ? '编辑任务' : '添加任务'
+    },
+    selectedUnfinishedCount() {
+      return this.selectedTodos.filter(id => {
+        const todo = this.filteredTodos.find(t => t.id === id)
+        return todo && !todo.done
+      }).length
     }
   },
   watch: {
@@ -385,14 +383,15 @@ export default {
     }
   },
   methods: {
-    ...mapActions('task', [
-      'addTodo',
-      'updateTodo',
-      'deleteTodo',
-      'toggleTodo',
-      'clearCompletedTodos',
-      'setFilter'
-    ]),
+    ...mapActions('task', {
+      addTodoAction: 'addTodo',
+      updateTodoAction: 'updateTodo',
+      deleteTodoAction: 'deleteTodo',
+      toggleTodoAction: 'toggleTodo',
+      clearCompletedTodosAction: 'clearCompletedTodos',
+      setFilter: 'setFilter',
+      fetchTodos: 'fetchTodos'
+    }),
     updateFilter() {
       this.setFilter(this.filter)
       this.currentPage = 1
@@ -407,18 +406,28 @@ export default {
       this.selectAll = value
     },
     async batchComplete() {
-      try {
-        for (const todoId of this.selectedTodos) {
-          const todo = this.filteredTodos.find(t => t.id === todoId)
-          if (todo && !todo.done) {
-            await this.toggleTodo(todoId)
-          }
-        }
-        this.selectedTodos = []
-        this.$message.success('批量完成成功')
-      } catch (error) {
-        this.$message.error('批量完成失败')
+      if (this.selectedUnfinishedCount === 0) {
+        this.$message.info('所选任务已全部完成')
+        return
       }
+      this.$confirm(`确定将选中的 ${this.selectedUnfinishedCount} 个任务标记为已完成吗？`, '批量完成', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async() => {
+        try {
+          for (const todoId of this.selectedTodos) {
+            const todo = this.filteredTodos.find(t => t.id === todoId)
+            if (todo && !todo.done) {
+              await this.toggleTodoAction(todoId)
+            }
+          }
+          this.selectedTodos = []
+          this.$message.success('批量完成成功')
+        } catch (error) {
+          this.$message.error('批量完成失败')
+        }
+      }).catch(() => {})
     },
     async batchDelete() {
       this.$confirm('确定要删除选中的任务吗？', '确认删除', {
@@ -428,7 +437,7 @@ export default {
       }).then(async() => {
         try {
           for (const todoId of this.selectedTodos) {
-            await this.deleteTodo(todoId)
+            await this.deleteTodoAction(todoId)
           }
           this.selectedTodos = []
           this.$message.success('批量删除成功')
@@ -437,22 +446,6 @@ export default {
         }
       }).catch(() => {
         // 用户取消删除
-      })
-    },
-    async clearCompleted() {
-      this.$confirm('确定要清除所有已完成的任务吗？', '确认清除', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(async() => {
-        try {
-          await this.clearCompletedTodos()
-          this.$message.success('清除成功')
-        } catch (error) {
-          this.$message.error('清除失败')
-        }
-      }).catch(() => {
-        // 用户取消清除
       })
     },
     editTodo(todo) {
@@ -465,13 +458,13 @@ export default {
         if (valid) {
           try {
             if (this.isEditing) {
-              await this.updateTodo({
+              await this.updateTodoAction({
                 id: this.currentTodo.id,
                 updates: this.currentTodo
               })
               this.$message.success('保存成功')
             } else {
-              await this.addTodo(this.currentTodo)
+              await this.addTodoAction(this.currentTodo)
               this.$message.success('添加成功')
             }
             this.showDialog = false
@@ -489,7 +482,7 @@ export default {
         type: 'warning'
       }).then(async() => {
         try {
-          await this.deleteTodo(id)
+          await this.deleteTodoAction(id)
           this.$message.success('删除成功')
         } catch (error) {
           this.$message.error('删除失败')
@@ -524,7 +517,13 @@ export default {
     isOverdue(dueDate) {
       if (!dueDate) return false
       return new Date(dueDate) < new Date()
+    },
+    toggleTodo(taskId) {
+      this.toggleTodoAction(taskId)
     }
+  },
+  created() {
+    this.fetchTodos()
   }
 }
 </script>
@@ -603,80 +602,58 @@ export default {
 .todo-list {
   .todo-item {
     display: flex;
-    align-items: flex-start;
-    padding: 16px 0;
-    border-bottom: 1px solid #EBEEF5;
-    transition: background-color 0.2s;
+    align-items: center;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    transition: box-shadow 0.2s ease;
 
     &:hover {
-      background-color: #f8f9fa;
-    }
-
-    &:last-child {
-      border-bottom: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
     }
 
     &.completed {
       opacity: 0.6;
+      .todo-text {
+        text-decoration: line-through;
+      }
     }
 
     .todo-checkbox {
       margin-right: 12px;
-      margin-top: 2px;
     }
 
     .todo-status {
       margin-right: 12px;
-      margin-top: 2px;
     }
 
     .todo-content {
       flex: 1;
       cursor: pointer;
-
       .todo-text {
-        font-size: 16px;
+        font-size: 14px;
         color: #303133;
-        margin-bottom: 8px;
-        line-height: 1.4;
-
-        &.done {
-          text-decoration: line-through;
-          color: #909399;
-        }
       }
-
       .todo-meta {
+        margin-top: 4px;
         display: flex;
         align-items: center;
         gap: 8px;
         flex-wrap: wrap;
-
-        .due-date {
-          font-size: 12px;
-          color: #909399;
-
-          &.overdue {
-            color: #f56c6c;
-          }
-
-          i {
-            margin-right: 4px;
-          }
-        }
       }
     }
 
     .todo-actions {
       display: flex;
       align-items: center;
-      gap: 8px;
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-
-    &:hover .todo-actions {
-      opacity: 1;
+      .el-button {
+        color: #909399;
+      }
+      .el-button:hover {
+        color: #409EFF;
+      }
     }
   }
 }

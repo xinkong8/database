@@ -1,3 +1,6 @@
+import { listProjects, createProject, updateProject as updateProjectApi, deleteProject as deleteProjectApi } from '@/api/project'
+import { listTasks, createTask, updateTask as updateTaskApi, deleteTask as deleteTaskApi } from '@/api/task'
+
 const state = {
   // 待办事项
   todos: JSON.parse(localStorage.getItem('todos')) || [
@@ -41,18 +44,25 @@ const state = {
 }
 
 const mutations = {
+  // 批量设置待办事项
+  SET_TODOS(state, todos) {
+    state.todos = todos
+    localStorage.setItem('todos', JSON.stringify(state.todos))
+  },
+
   // 待办事项相关
   ADD_TODO(state, todo) {
     const newTodo = {
-      id: Date.now(),
+      id: todo.id,
       text: todo.text,
-      done: false,
-      priority: todo.priority || 'medium',
+      done: todo.done,
+      status: todo.status || (todo.done ? 'completed' : 'pending'),
+      priority: todo.priority,
       category: todo.category || 'personal',
       project: todo.project || null,
       dueDate: todo.dueDate || null,
-      createdAt: new Date().toISOString(),
-      ...todo
+      note: todo.note || '',
+      createdAt: todo.createdAt || new Date().toISOString()
     }
     state.todos.push(newTodo)
     localStorage.setItem('todos', JSON.stringify(state.todos))
@@ -91,16 +101,21 @@ const mutations = {
     localStorage.setItem('todos', JSON.stringify(state.todos))
   },
 
+  // 批量设置项目（覆盖本地）
+  SET_PROJECTS(state, projects) {
+    state.projects = projects
+    localStorage.setItem('projects', JSON.stringify(state.projects))
+  },
+
   // 项目相关
   ADD_PROJECT(state, project) {
     const newProject = {
-      id: Date.now(),
+      id: project.id,
       name: project.name,
       description: project.description || '',
-      status: 'active',
+      status: project.status || 'active',
       color: project.color || '#409EFF',
-      createdAt: new Date().toISOString(),
-      ...project
+      createdAt: project.created_at || project.createdAt || new Date().toISOString()
     }
     state.projects.push(newProject)
     localStorage.setItem('projects', JSON.stringify(state.projects))
@@ -166,21 +181,89 @@ const mutations = {
 }
 
 const actions = {
+  // 拉取待办事项列表
+  async fetchTodos({ commit }) {
+    const res = await listTasks({ limit: 1000 }) // 获取足够多的任务，前端自行分页
+    const mapPriority = n => {
+      if (n <= 2) return 'low'
+      if (n === 3) return 'medium'
+      if (n === 4) return 'high'
+      return 'urgent'
+    }
+    const todos = (res.tasks || []).map(t => ({
+      id: t.id,
+      text: t.title,
+      done: t.status === 'completed',
+      status: t.status,
+      priority: mapPriority(t.priority),
+      category: 'personal',
+      project: t.project_id,
+      dueDate: t.due_date,
+      note: t.description || '',
+      createdAt: t.created_at
+    }))
+    commit('SET_TODOS', todos)
+  },
+
   // 待办事项相关
-  addTodo({ commit }, todo) {
-    commit('ADD_TODO', todo)
+  async addTodo({ commit }, todo) {
+    const priorityMap = { low: 1, medium: 3, high: 4, urgent: 5 }
+    const payload = {
+      title: todo.text,
+      priority: priorityMap[todo.priority] || 3
+    }
+    if (todo.note) {
+      payload.description = todo.note.trim()
+    }
+    if (todo.dueDate) {
+      payload.due_date = formatDate(todo.dueDate)
+    }
+    if (todo.project) {
+      payload.project_id = todo.project
+    }
+    const data = await createTask(payload)
+    const saved = {
+      id: data.id,
+      text: data.title,
+      done: data.status === 'completed',
+      status: data.status,
+      priority: todo.priority,
+      category: todo.category || 'personal',
+      project: data.project_id,
+      dueDate: data.due_date,
+      note: data.description || todo.note || '',
+      createdAt: data.created_at
+    }
+    commit('ADD_TODO', saved)
   },
 
-  updateTodo({ commit }, payload) {
-    commit('UPDATE_TODO', payload)
+  async updateTodo({ commit }, { id, updates }) {
+    const priorityMap = { low: 1, medium: 3, high: 4, urgent: 5 }
+    const apiUpdates = {}
+    if (updates.text !== undefined) apiUpdates.title = updates.text
+    if (updates.note !== undefined) apiUpdates.description = updates.note
+    if (updates.priority !== undefined) apiUpdates.priority = priorityMap[updates.priority] || 3
+    if (updates.dueDate !== undefined) apiUpdates.due_date = formatDate(updates.dueDate)
+    if (updates.project !== undefined) apiUpdates.project_id = updates.project
+    if (updates.done !== undefined) {
+      apiUpdates.status = updates.done ? 'completed' : 'pending'
+    }
+
+    await updateTaskApi(id, apiUpdates)
+    commit('UPDATE_TODO', { id, updates })
   },
 
-  deleteTodo({ commit }, id) {
+  async deleteTodo({ commit }, id) {
+    await deleteTaskApi(id)
     commit('DELETE_TODO', id)
   },
 
-  toggleTodo({ commit }, id) {
-    commit('TOGGLE_TODO', id)
+  async toggleTodo({ state, commit }, id) {
+    const todo = state.todos.find(t => t.id === id)
+    if (!todo) return
+    const newStatus = todo.done ? 'completed' : 'pending'
+    await updateTaskApi(id, { status: newStatus })
+    commit('UPDATE_TODO', { id, updates: { status: newStatus }})
   },
 
   toggleAllTodos({ commit }, done) {
@@ -191,16 +274,43 @@ const actions = {
     commit('CLEAR_COMPLETED_TODOS')
   },
 
+  // 拉取项目列表
+  async fetchProjects({ commit }) {
+    const res = await listProjects()
+    // 后端 data.projects
+    const projects = (res.projects || []).map(p => ({
+      id: p.id,
+      name: p.name,
+      description: p.description,
+      status: p.status,
+      color: p.color,
+      createdAt: p.created_at
+    }))
+    commit('SET_PROJECTS', projects)
+  },
+
   // 项目相关
-  addProject({ commit }, project) {
-    commit('ADD_PROJECT', project)
+  async addProject({ commit }, project) {
+    // 调用后端创建
+    const data = await createProject(project)
+    const saved = {
+      id: data.id,
+      name: data.name,
+      description: data.description,
+      status: data.status,
+      color: data.color,
+      createdAt: data.created_at
+    }
+    commit('ADD_PROJECT', saved)
   },
 
-  updateProject({ commit }, payload) {
-    commit('UPDATE_PROJECT', payload)
+  async updateProject({ commit }, { id, updates }) {
+    await updateProjectApi(id, updates)
+    commit('UPDATE_PROJECT', { id, updates })
   },
 
-  deleteProject({ commit }, id) {
+  async deleteProject({ commit }, id) {
+    await deleteProjectApi(id)
     commit('DELETE_PROJECT', id)
   },
 
@@ -333,6 +443,19 @@ const getters = {
       completionRate: total > 0 ? Math.round((completed / total) * 100) : 0
     }
   }
+}
+
+// 工具：格式化日期为 YYYY-MM-DD（支持 Date 对象 / 字符串）
+const formatDate = (d) => {
+  if (!d) return null
+  if (d instanceof Date) {
+    return d.toISOString().slice(0, 10)
+  }
+  if (typeof d === 'string') {
+    // 处理 '2025-07-06T16:00:00.000Z' 或 '2025-07-06'
+    return d.slice(0, 10)
+  }
+  return null
 }
 
 export default {

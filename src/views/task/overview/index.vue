@@ -191,6 +191,16 @@
             />
           </el-select>
         </el-form-item>
+        <el-form-item label="备注">
+          <el-input
+            v-model="newTodo.note"
+            type="textarea"
+            placeholder="请输入备注信息"
+            :rows="2"
+            maxlength="200"
+            show-word-limit
+          />
+        </el-form-item>
         <el-form-item label="截止日期">
           <el-date-picker
             v-model="newTodo.dueDate"
@@ -202,7 +212,7 @@
       </el-form>
       <div slot="footer">
         <el-button @click="showAddTodoDialog = false">取消</el-button>
-        <el-button type="primary" @click="addTodo">确定</el-button>
+        <el-button type="primary" @click="handleAddTodo">确定</el-button>
       </div>
     </el-dialog>
 
@@ -226,7 +236,7 @@
       </el-form>
       <div slot="footer">
         <el-button @click="showAddProjectDialog = false">取消</el-button>
-        <el-button type="primary" @click="addProject">确定</el-button>
+        <el-button type="primary" @click="handleAddProject">确定</el-button>
       </div>
     </el-dialog>
   </div>
@@ -246,7 +256,8 @@ export default {
         priority: 'medium',
         category: 1,
         project: null,
-        dueDate: null
+        dueDate: null,
+        note: ''
       },
       newProject: {
         name: '',
@@ -274,18 +285,18 @@ export default {
     }
   },
   methods: {
-    ...mapActions('task', [
-      'addTodo',
-      'addProject'
-    ]),
-    async addTodo() {
+    ...mapActions('task', {
+      addTodoAction: 'addTodo',
+      addProjectAction: 'addProject'
+    }),
+    async handleAddTodo() {
       if (!this.newTodo.text.trim()) {
         this.$message.warning('请输入任务内容')
         return
       }
 
       try {
-        await this.addTodo(this.newTodo)
+        await this.addTodoAction(this.newTodo)
         this.$message.success('添加成功')
         this.showAddTodoDialog = false
         this.resetNewTodo()
@@ -293,14 +304,14 @@ export default {
         this.$message.error('添加失败')
       }
     },
-    async addProject() {
+    async handleAddProject() {
       if (!this.newProject.name.trim()) {
         this.$message.warning('请输入项目名称')
         return
       }
 
       try {
-        await this.addProject(this.newProject)
+        await this.addProjectAction(this.newProject)
         this.$message.success('项目创建成功')
         this.showAddProjectDialog = false
         this.resetNewProject()
@@ -317,7 +328,8 @@ export default {
         priority: 'medium',
         category: 1,
         project: null,
-        dueDate: null
+        dueDate: null,
+        note: ''
       }
     },
     resetNewProject() {

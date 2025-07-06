@@ -17,7 +17,8 @@ router.get('/', authenticateToken, async (req, res) => {
       endDate,
       keyword,
       sortBy = 'created_at',
-      sortOrder = 'DESC'
+      sortOrder = 'DESC',
+      projectId
     } = req.query;
 
     const offset = (page - 1) * limit;
@@ -50,10 +51,15 @@ router.get('/', authenticateToken, async (req, res) => {
       params.push(`%${keyword}%`, `%${keyword}%`);
     }
 
+    if (projectId) {
+      whereConditions.push('project_id = ?');
+      params.push(parseInt(projectId));
+    }
+
     const whereClause = whereConditions.join(' AND ');
     
     // 验证排序字段
-    const allowedSortFields = ['created_at', 'updated_at', 'due_date', 'priority', 'title'];
+    const allowedSortFields = ['created_at', 'updated_at', 'due_date', 'priority', 'title', 'project_id'];
     const validSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'created_at';
     const validSortOrder = ['ASC', 'DESC'].includes(sortOrder.toUpperCase()) ? sortOrder.toUpperCase() : 'DESC';
 
@@ -68,7 +74,7 @@ router.get('/', authenticateToken, async (req, res) => {
 
     // 获取任务列表 (MySQL 不支持 LIMIT/OFFSET 使用占位符)
     const sql = `
-      SELECT id, title, description, status, priority, due_date, created_at, updated_at
+      SELECT id, title, description, status, priority, project_id, due_date, created_at, updated_at
       FROM tasks 
       WHERE ${whereClause}
       ORDER BY ${validSortBy} ${validSortOrder}
@@ -137,7 +143,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 router.post('/', authenticateToken, async (req, res) => {
   try {
     const userId = req.userId;
-    const { title, description, priority = 3, due_date } = req.body;
+    const { title, description, priority = 3, due_date, project_id } = req.body;
 
     // 参数验证
     if (!title || title.trim() === '') {
@@ -154,10 +160,18 @@ router.post('/', authenticateToken, async (req, res) => {
       });
     }
 
+    let projectIdValue = null;
+    if (project_id !== undefined && project_id !== null) {
+      projectIdValue = parseInt(project_id);
+      if (isNaN(projectIdValue)) {
+        return res.status(400).json({ success:false, message:'无效的项目ID' });
+      }
+    }
+
     // 创建任务
     const result = await dbRun(
-      'INSERT INTO tasks (user_id, title, description, priority, due_date) VALUES (?, ?, ?, ?, ?)',
-      [userId, title.trim(), description || null, parseInt(priority), due_date || null]
+      'INSERT INTO tasks (user_id, title, description, priority, project_id, due_date) VALUES (?, ?, ?, ?, ?, ?)',
+      [userId, title.trim(), description || null, parseInt(priority), projectIdValue, due_date || null]
     );
 
     // 获取创建的任务
@@ -186,7 +200,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const userId = req.userId;
     const taskId = req.params.id;
-    const { title, description, status, priority, due_date } = req.body;
+    const { title, description, status, priority, due_date, project_id: updProjectId } = req.body;
 
     // 检查任务是否存在且属于当前用户
     const existingTask = await dbGet(
@@ -246,6 +260,19 @@ router.put('/:id', authenticateToken, async (req, res) => {
     if (due_date !== undefined) {
       updateFields.push('due_date = ?');
       updateValues.push(due_date);
+    }
+
+    if (updProjectId !== undefined) {
+      if (updProjectId === null) {
+        updateFields.push('project_id = NULL');
+      } else {
+        const pidNum = parseInt(updProjectId);
+        if (isNaN(pidNum)) {
+          return res.status(400).json({ success:false, message:'无效的项目ID' });
+        }
+        updateFields.push('project_id = ?');
+        updateValues.push(pidNum);
+      }
     }
 
     if (updateFields.length === 0) {

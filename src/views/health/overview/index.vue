@@ -48,9 +48,9 @@
       </el-col>
 
       <el-col :xs="24" :sm="12" :md="6" :lg="6">
-        <div class="health-card metrics-card">
+        <div class="health-card score-card">
           <div class="card-icon">
-            <i class="el-icon-data-line" />
+            <i class="el-icon-data-analysis" />
           </div>
           <div class="card-content">
             <h3>健康评分</h3>
@@ -73,11 +73,7 @@
               <el-button size="mini" @click="changePeriod('quarter')">季</el-button>
             </el-button-group>
           </div>
-          <div class="chart-placeholder">
-            <i class="el-icon-pie-chart" style="font-size: 48px; color: #ddd;" />
-            <p>体重趋势图表</p>
-            <p style="color: #999; font-size: 12px;">点击体重记录查看详细数据</p>
-          </div>
+          <div id="weightTrendChart" style="height:300px;" />
         </el-card>
       </el-col>
 
@@ -86,11 +82,7 @@
           <div slot="header" class="clearfix">
             <span>运动统计</span>
           </div>
-          <div class="chart-placeholder">
-            <i class="el-icon-data-board" style="font-size: 48px; color: #ddd;" />
-            <p>运动统计图表</p>
-            <p style="color: #999; font-size: 12px;">点击运动追踪查看详细数据</p>
-          </div>
+          <div id="exercisePieChart" style="height:300px;" />
         </el-card>
       </el-col>
     </el-row>
@@ -101,24 +93,7 @@
           <div slot="header" class="clearfix">
             <span>睡眠质量</span>
           </div>
-          <div class="chart-placeholder">
-            <i class="el-icon-moon-night" style="font-size: 48px; color: #ddd;" />
-            <p>睡眠质量图表</p>
-            <p style="color: #999; font-size: 12px;">点击睡眠监控查看详细数据</p>
-          </div>
-        </el-card>
-      </el-col>
-
-      <el-col :xs="24" :lg="12">
-        <el-card class="chart-card">
-          <div slot="header" class="clearfix">
-            <span>健康指标</span>
-          </div>
-          <div class="chart-placeholder">
-            <i class="el-icon-data-analysis" style="font-size: 48px; color: #ddd;" />
-            <p>健康指标雷达图</p>
-            <p style="color: #999; font-size: 12px;">点击健康指标查看详细数据</p>
-          </div>
+          <div id="sleepQualityChart" style="height:300px;" />
         </el-card>
       </el-col>
     </el-row>
@@ -140,9 +115,6 @@
             <el-button type="info" icon="el-icon-moon-night" @click="$router.push('/health/sleep')">
               记录睡眠
             </el-button>
-            <el-button type="warning" icon="el-icon-data-line" @click="$router.push('/health/metrics')">
-              健康指标
-            </el-button>
           </el-button-group>
         </el-card>
       </el-col>
@@ -152,6 +124,7 @@
 
 <script>
 import { mapGetters, mapActions } from 'vuex'
+import * as echarts from 'echarts'
 
 export default {
   name: 'HealthOverview',
@@ -195,19 +168,109 @@ export default {
   created() {
     this.fetchDashboardData()
   },
+  mounted() {
+    this.fetchDashboardData().then(() => {
+      this.initCharts()
+      this.$nextTick(() => {
+        window.addEventListener('resize', this.resizeCharts)
+      })
+    })
+  },
+  beforeDestroy() {
+    window.removeEventListener('resize', this.resizeCharts)
+  },
   methods: {
     ...mapActions('health', [
-      // 这里将来可以添加健康相关的action
+      'fetchWeightRecords',
+      'fetchExerciseRecords',
+      'fetchSleepRecords'
     ]),
     async fetchDashboardData() {
       try {
-        // 这里将来可以调用store中的action来获取真实数据
-        // await this.$store.dispatch('health/fetchDashboardData')
+        await Promise.all([
+          this.fetchWeightRecords(),
+          this.fetchExerciseRecords(),
+          this.fetchSleepRecords()
+        ])
         console.log('健康概览数据加载完成')
       } catch (error) {
         console.error('获取健康概览数据失败:', error)
         this.$message.error('获取健康数据失败')
       }
+    },
+    initCharts() {
+      this.drawWeightTrend()
+      this.drawExercisePie()
+      this.drawSleepQuality()
+    },
+    resizeCharts() {
+      this.weightChart && this.weightChart.resize()
+      this.exerciseChart && this.exerciseChart.resize()
+      this.sleepChart && this.sleepChart.resize()
+    },
+    drawWeightTrend() {
+      if (!echarts.init) return
+      const dom = document.getElementById('weightTrendChart')
+      if (!dom) return
+      this.weightChart = echarts.init(dom)
+      const dates = this.$store.getters['health/weightRecords'].slice().reverse().map(r => String(r.date).split('T')[0].slice(5))
+      const weights = this.$store.getters['health/weightRecords'].slice().reverse().map(r => r.weight)
+      const option = {
+        tooltip: { trigger: 'axis' },
+        xAxis: { type: 'category', data: dates },
+        yAxis: { type: 'value', name: 'kg' },
+        series: [
+          {
+            data: weights,
+            type: 'line',
+            smooth: true
+          }
+        ]
+      }
+      this.weightChart.setOption(option)
+    },
+    drawExercisePie() {
+      if (!echarts.init) return
+      const dom = document.getElementById('exercisePieChart')
+      if (!dom) return
+      this.exerciseChart = echarts.init(dom)
+      const exerciseRecords = this.$store.getters['health/exerciseRecords']
+      const map = {}
+      exerciseRecords.forEach(r => { map[r.type] = (map[r.type] || 0) + 1 })
+      const data = Object.keys(map).map(k => ({ name: k, value: map[k] }))
+      const pieOption = {
+        tooltip: { trigger: 'item' },
+        legend: { top: '10%' },
+        series: [
+          {
+            type: 'pie',
+            radius: '65%',
+            data
+          }
+        ]
+      }
+      this.exerciseChart.setOption(pieOption)
+    },
+    drawSleepQuality() {
+      if (!echarts.init) return
+      const dom = document.getElementById('sleepQualityChart')
+      if (!dom) return
+      this.sleepChart = echarts.init(dom)
+      const rec = this.$store.getters['health/sleepRecords'].slice().reverse()
+      const dates = rec.map(r => String(r.date).split('T')[0].slice(5))
+      const quality = rec.map(r => r.quality)
+      const sleepOption = {
+        tooltip: { trigger: 'axis' },
+        xAxis: { type: 'category', data: dates },
+        yAxis: { type: 'value', min: 0, max: 5 },
+        series: [
+          {
+            data: quality,
+            type: 'bar'
+          }
+        ]
+      }
+      this.sleepChart.setOption(sleepOption)
     },
     changePeriod(period) {
       this.currentPeriod = period
@@ -299,7 +362,7 @@ export default {
         background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
       }
 
-      &.metrics-card .card-icon {
+      &.score-card .card-icon {
         background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
       }
     }

@@ -48,6 +48,9 @@ async function initDatabase() {
     // 创建数据表
     await createTables();
     
+    // 确保旧表新增列
+    await ensureColumns();
+    
     console.log('🎉 数据库初始化完成！');
 
   } catch (error) {
@@ -109,6 +112,7 @@ async function createTables() {
         CREATE TABLE IF NOT EXISTS tasks (
           id INT AUTO_INCREMENT PRIMARY KEY,
           user_id INT NOT NULL,
+          project_id INT DEFAULT NULL,
           title VARCHAR(200) NOT NULL,
           description TEXT,
           status ENUM('pending', 'in_progress', 'completed', 'cancelled') DEFAULT 'pending',
@@ -119,12 +123,13 @@ async function createTables() {
           FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
           INDEX idx_user_status (user_id, status),
           INDEX idx_due_date (due_date),
+          INDEX idx_project (project_id),
           INDEX idx_priority (priority)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       `
     },
 
-    // 健康记录表
+    // 健康记录表（包含 height 字段）
     {
       name: 'health_records',
       sql: `
@@ -133,6 +138,7 @@ async function createTables() {
           user_id INT NOT NULL,
           type VARCHAR(50) NOT NULL,
           value DECIMAL(8,2) NOT NULL,
+          height DECIMAL(5,2) DEFAULT NULL,
           unit VARCHAR(20),
           date DATE NOT NULL,
           notes TEXT,
@@ -182,6 +188,26 @@ async function createTables() {
           INDEX idx_category (category)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       `
+    },
+
+    // 项目表
+    {
+      name: 'projects',
+      sql: `
+        CREATE TABLE IF NOT EXISTS projects (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          user_id INT NOT NULL,
+          name VARCHAR(100) NOT NULL,
+          description TEXT,
+          status ENUM('active','completed','paused') DEFAULT 'active',
+          color VARCHAR(20) DEFAULT '#409EFF',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+          UNIQUE KEY uq_user_name (user_id, name),
+          INDEX idx_status (status)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      `
     }
   ];
 
@@ -201,11 +227,23 @@ async function createTables() {
     if (rows.length === 0) {
       console.log('🔧 finance_budgets 缺少 type 列，正在自动添加...');
       await pool.execute("ALTER TABLE finance_budgets ADD COLUMN type ENUM('income','expense') NOT NULL DEFAULT 'expense' AFTER month");
-      // 如需唯一键包含 type，可根据需要手动调整
       console.log('✅ type 列已添加');
     }
   } catch (err) {
     console.error('❌ 检查/添加 finance_budgets.type 列失败:', err.message);
+    throw err;
+  }
+
+  // 额外列检查：tasks.project_id
+  try {
+    const [rows] = await pool.query("SHOW COLUMNS FROM tasks LIKE 'project_id'");
+    if (rows.length === 0) {
+      console.log('🔧 tasks 缺少 project_id 列，正在自动添加...');
+      await pool.execute("ALTER TABLE tasks ADD COLUMN project_id INT DEFAULT NULL AFTER priority");
+      console.log('✅ project_id 列已添加');
+    }
+  } catch (err) {
+    console.error('❌ 检查/添加 tasks.project_id 列失败:', err.message);
     throw err;
   }
 }
@@ -278,6 +316,19 @@ process.on('SIGTERM', async () => {
   await closePool();
   process.exit(0);
 });
+
+// 兼容老库：若 health_records 已存在但缺少 height 列则补列
+async function ensureColumns() {
+  try {
+    const [rows] = await pool.query("SHOW COLUMNS FROM health_records LIKE 'height'")
+    if (rows.length === 0) {
+      await pool.query("ALTER TABLE health_records ADD COLUMN height DECIMAL(5,2) DEFAULT NULL AFTER value")
+      console.log('✅ health_records.height 列已补充')
+    }
+  } catch (err) {
+    console.error('❌ 检查/添加 height 列失败:', err.message)
+  }
+}
 
 // 初始化数据库
 initDatabase();
