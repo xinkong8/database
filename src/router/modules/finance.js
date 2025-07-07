@@ -39,12 +39,6 @@ const financeRouter = {
       component: () => import('@/views/finance/statistics'),
       name: 'FinanceStatistics',
       meta: { title: '统计分析', icon: 'chart' }
-    },
-    {
-      path: 'settings',
-      component: () => import('@/views/finance/settings'),
-      name: 'FinanceSettings',
-      meta: { title: '分类设置', icon: 'setting' }
     }
   ]
 }
