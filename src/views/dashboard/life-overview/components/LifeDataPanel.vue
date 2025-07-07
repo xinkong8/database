@@ -43,16 +43,16 @@
       </div>
     </el-col>
     <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
-      <div class="card-panel" @click="goto('/task/habits')" @dblclick.stop="handleSetChartData('habits')">
-        <div class="card-panel-icon-wrapper icon-habits">
+      <div class="card-panel" @click="goto('/health/overview')" @dblclick.stop="handleSetChartData('health_week')">
+        <div class="card-panel-icon-wrapper icon-health-week">
           <svg-icon icon-class="chart" class-name="card-panel-icon" />
         </div>
         <div class="card-panel-description">
           <div class="card-panel-text">
-            习惯完成
+            本周运动
           </div>
-          <count-to :start-val="0" :end-val="habitsDone" :duration="1500" class="card-panel-num" />
-          <div class="card-panel-unit">/ 7</div>
+          <count-to :start-val="0" :end-val="weeklyExercise" :duration="1500" class="card-panel-num" />
+          <div class="card-panel-unit">次</div>
         </div>
       </div>
     </el-col>
@@ -72,7 +72,7 @@ export default {
     return {
       monthExpense: 0,
       todaySteps: 0,
-      habitsDone: 0
+      weeklyExercise: 0
     }
   },
   computed: {
@@ -115,7 +115,19 @@ export default {
         /* ignore */
       }
 
-      // 3. 习惯完成（暂时 0，留待习惯模块接入）
+      // 3. 本周运动次数
+      try {
+        const startDate = dayjs().subtract(6, 'day').format('YYYY-MM-DD')
+        const endDate = dayjs().format('YYYY-MM-DD')
+        await this.$store.dispatch('health/fetchExerciseRecords', { page: 1, limit: 500, startDate, endDate })
+        const records = this.$store.getters['health/exerciseRecords']
+        this.weeklyExercise = records.filter(r => {
+          const d = dayjs(r.date).format('YYYY-MM-DD')
+          return d >= startDate && d <= endDate
+        }).length
+      } catch (e) {
+        /* ignore */
+      }
     }
   }
 }
@@ -157,7 +169,7 @@ export default {
         background: #e74c3c;
       }
 
-      .icon-habits {
+      .icon-health-week {
         background: #9b59b6;
       }
     }
@@ -174,7 +186,7 @@ export default {
       color: #e74c3c;
     }
 
-    .icon-habits {
+    .icon-health-week {
       color: #9b59b6;
     }
 

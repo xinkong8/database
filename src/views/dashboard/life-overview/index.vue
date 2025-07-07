@@ -41,13 +41,13 @@
 
     <!-- 生活管理区域 -->
     <el-row :gutter="8">
-      <el-col :xs="24" :sm="24" :md="12" :lg="8" :xl="8" style="padding-right:8px;margin-bottom:30px;">
+      <el-col :xs="24" :sm="24" :md="12" :lg="10" :xl="10" style="padding-right:8px;margin-bottom:30px;">
         <div class="section-wrapper">
           <h4 class="section-title">最近财务记录</h4>
           <recent-transactions />
         </div>
       </el-col>
-      <el-col :xs="24" :sm="12" :md="6" :lg="4" :xl="4" style="margin-bottom:30px;">
+      <el-col :xs="24" :sm="12" :md="6" :lg="6" :xl="6" style="margin-bottom:30px;">
         <div class="section-wrapper">
           <h4 class="section-title">今日待办</h4>
           <todo-list />
@@ -276,6 +276,7 @@ export default {
     height: 100%;
     display: flex;
     flex-direction: column;
+    min-height: 420px;
     .el-table,
     .quick-actions,
     .health-data-panel {

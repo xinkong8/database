@@ -110,6 +110,11 @@ export const constantRoutes = [
         meta: { title: '个人资料', icon: 'user', noCache: true }
       }
     ]
+  },
+  {
+    path: '/register',
+    component: () => import('@/views/register/index'),
+    hidden: true
   }
 ]
 

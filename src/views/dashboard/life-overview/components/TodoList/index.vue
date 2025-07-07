@@ -90,46 +90,45 @@ export default {
     }
   },
   methods: {
-    ...mapActions('task', [
-      'addTodo',
-      'updateTodo',
-      'deleteTodo',
-      'toggleTodo'
-    ]),
+    ...mapActions('task', {
+      addTodoAction: 'addTodo',
+      updateTodoAction: 'updateTodo',
+      deleteTodoAction: 'deleteTodo',
+      toggleTodoAction: 'toggleTodo'
+    }),
     async addTodo() {
       const text = this.newTodoText.trim()
-      if (text) {
-        try {
-          await this.addTodo({
-            text,
-            priority: 'medium',
-            category: 1, // 默认分类：个人
-            project: null,
-            dueDate: new Date().toISOString().split('T')[0] // 今天的日期
-          })
-          this.newTodoText = ''
-        } catch (error) {
-          console.error('添加待办事项失败:', error)
-        }
+      if (!text) return
+      try {
+        await this.addTodoAction({
+          text,
+          priority: 'medium',
+          category: 1, // 默认分类：个人
+          project: null,
+          dueDate: new Date().toISOString().split('T')[0] // 今天的日期
+        })
+        this.newTodoText = ''
+      } catch (error) {
+        console.error('添加待办事项失败:', error)
       }
     },
     async toggleTodo(todo) {
       try {
-        await this.toggleTodo(todo.id)
+        await this.toggleTodoAction(todo.id)
       } catch (error) {
         console.error('切换待办事项状态失败:', error)
       }
     },
     async deleteTodo(todo) {
       try {
-        await this.deleteTodo(todo.id)
+        await this.deleteTodoAction(todo.id)
       } catch (error) {
         console.error('删除待办事项失败:', error)
       }
     },
     async editTodo({ todo, value }) {
       try {
-        await this.updateTodo({
+        await this.updateTodoAction({
           id: todo.id,
           updates: { text: value }
         })
@@ -156,13 +155,63 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+/* 让待办列表整体在父级卡片(section-wrapper)中更贴合 */
+.todoapp {
+  /* 撑满父容器宽度 */
+  width: 100%;
+  max-width: 100%;
+  margin: 0; /* 去除居中间距 */
+
+  /* 去掉外层阴影，沿用父级卡片阴影 */
+  box-shadow: none;
+  background: transparent; /* 使用父级背景色 */
+
+  /* 让 Todo 区域在父卡片中纵向铺满 */
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto; /* 作为父级flex子项占据剩余高度 */
+
+  /* 让输入框更紧凑 */
+  .new-todo {
+    padding: 6px 12px;
+    border: 1px solid #e6e6e6;
+    border-radius: 4px;
+    background: #fff;
+  }
+
+  /* 主体列表区域可滚动且占据剩余高度 */
+  .main {
+    flex: 1 1 auto;
+    overflow-y: auto;
+  }
+
+  /* 隐藏批量切换的下拉箭头，避免占位 */
+  .toggle-all + label {
+    display: none;
+  }
+
+  /* 调整底部信息区域间距 */
+  .footer {
+    padding: 8px 0 0;
+    border-top: none;
+
+    /* 让 footer 固定在底部 */
+    margin-top: auto;
+
+    .todo-count {
+      float: none;
+    }
+  }
+}
+
 .footer-actions {
   display: flex;
   justify-content: flex-end;
   margin-top: 8px;
 }
 </style>
-
 <style lang="scss">
   @import './index.scss';
 </style>
+
