@@ -17,8 +17,8 @@
       <line-chart :chart-data="chartData" />
     </el-row>
 
-    <!-- 生活统计图表区域 -->
-    <el-row :gutter="32">
+    <!-- 生活统计图表区域（已隐藏） -->
+    <el-row v-if="false" :gutter="32">
       <el-col :xs="24" :sm="24" :lg="8">
         <div class="chart-wrapper">
           <h4 class="chart-section-title">健康指标</h4>
@@ -53,7 +53,7 @@
           <todo-list />
         </div>
       </el-col>
-      <el-col :xs="24" :sm="12" :md="6" :lg="4" :xl="4" style="margin-bottom:30px;">
+      <el-col v-if="false" :xs="24" :sm="12" :md="6" :lg="4" :xl="4" style="margin-bottom:30px;">
         <div class="section-wrapper">
           <h4 class="section-title">快速操作</h4>
           <quick-actions />

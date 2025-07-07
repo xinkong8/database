@@ -39,18 +39,6 @@
           </div>
         </div>
       </el-col>
-
-      <el-col :span="12">
-        <div class="metric-item">
-          <div class="metric-icon health">
-            <i class="el-icon-monitor" />
-          </div>
-          <div class="metric-info">
-            <span class="metric-label">血压</span>
-            <span class="metric-value">{{ bloodPressure }}</span>
-          </div>
-        </div>
-      </el-col>
     </el-row>
 
     <!-- 健康趋势图表 -->
@@ -89,14 +77,7 @@
         >
           睡眠
         </el-button>
-        <el-button
-          size="mini"
-          type="warning"
-          icon="el-icon-data-line"
-          @click="goToPage('/health/metrics')"
-        >
-          指标
-        </el-button>
+        <!-- 指标按钮已移除 -->
       </div>
     </div>
 
@@ -104,7 +85,7 @@
     <div class="health-reminders">
       <h5 class="reminders-title">健康提醒</h5>
       <div class="reminder-list">
-        <div v-for="reminder in healthReminders" :key="reminder.id" class="reminder-item">
+        <div v-for="(reminder, idx) in healthReminders" :key="idx" class="reminder-item">
           <i :class="reminder.icon" :style="{ color: reminder.color }" />
           <span class="reminder-text">{{ reminder.text }}</span>
         </div>
@@ -116,61 +97,75 @@
 <script>
 import { mapGetters } from 'vuex'
 import * as echarts from 'echarts'
+import dayjs from 'dayjs'
 
 export default {
   name: 'HealthDataPanel',
   data() {
     return {
-      chart: null,
-      healthReminders: [
-        {
-          id: 1,
-          icon: 'el-icon-warning',
-          color: '#E6A23C',
-          text: '今天还没有记录体重哦'
-        },
-        {
-          id: 2,
-          icon: 'el-icon-success',
-          color: '#67C23A',
-          text: '睡眠质量不错，继续保持'
-        },
-        {
-          id: 3,
-          icon: 'el-icon-info',
-          color: '#409EFF',
-          text: '建议每天至少运动30分钟'
-        }
-      ]
+      chart: null
     }
   },
   computed: {
-    ...mapGetters([
+    ...mapGetters('health', [
       'latestWeight',
       'weeklyExerciseCount',
       'averageSleepDuration'
     ]),
-
-    currentWeight() {
-      return this.latestWeight?.weight || 68.5
+    exerciseRecords() {
+      return this.$store.getters['health/exerciseRecords'] || []
     },
-
+    sleepRecords() {
+      return this.$store.getters['health/sleepRecords'] || []
+    },
+    currentWeight() {
+      return this.latestWeight?.weight ?? '--'
+    },
     weeklyExercise() {
       return this.weeklyExerciseCount || 3
     },
-
     sleepQuality() {
-      return 4.2
+      const score = Math.min(5, ((this.averageSleepDuration / 9) * 5))
+      return score.toFixed(1)
     },
+    healthReminders() {
+      const arr = []
+      const todayStr = dayjs().format('YYYY-MM-DD')
 
-    bloodPressure() {
-      return '120/80'
+      // 1. 体重
+      if (!this.latestWeight || !dayjs(this.latestWeight.date || this.latestWeight.createdAt).isSame(todayStr, 'day')) {
+        arr.push({ icon: 'el-icon-warning', color: '#E6A23C', text: '今天还没有记录体重哦' })
+      }
+
+      // 2. 睡眠
+      if (this.averageSleepDuration < 6) {
+        arr.push({ icon: 'el-icon-moon-night', color: '#F56C6C', text: '昨晚睡眠时长不足，注意休息' })
+      } else if (this.averageSleepDuration >= 6 && this.averageSleepDuration < 7) {
+        arr.push({ icon: 'el-icon-info', color: '#E6A23C', text: '睡眠质量一般，尽量保证 7~9 小时' })
+      } else {
+        arr.push({ icon: 'el-icon-success', color: '#67C23A', text: '睡眠质量不错，继续保持' })
+      }
+
+      // 3. 运动
+      if (this.weeklyExerciseCount < 3) {
+        arr.push({ icon: 'el-icon-bicycle', color: '#909399', text: '本周运动不足，建议至少 3 次' })
+      }
+
+      // 4. 综合提示
+      arr.push({ icon: 'el-icon-info', color: '#409EFF', text: '保持良好作息和饮食习惯' })
+      return arr
     }
+    // 血压已移除
   },
 
   mounted() {
-    this.$nextTick(() => {
-      this.initChart()
+    // 拉取最新记录后再绘图
+    Promise.all([
+      this.$store.dispatch('health/fetchWeightRecords', { page: 1, limit: 100 }),
+      this.$store.dispatch('health/fetchExerciseRecords', { page: 1, limit: 500 }),
+      this.$store.dispatch('health/fetchSleepRecords', { page: 1, limit: 500 })
+    ]).finally(() => {
+      this.$nextTick(this.initChart)
     })
   },
 
@@ -182,69 +177,44 @@ export default {
 
   methods: {
     initChart() {
-      const chartDom = document.getElementById('healthTrendChart')
-      if (!chartDom) return
+      const dom = document.getElementById('healthTrendChart')
+      if (!dom) return
 
-      this.chart = echarts.init(chartDom)
+      this.chart = echarts.init(dom)
+
+      const dates = []
+      const exerciseArr = []
+      const sleepArr = []
+      const healthIdx = []
+
+      for (let i = 6; i >= 0; i--) {
+        const d = dayjs().subtract(i, 'day')
+        dates.push(d.format('dd').replace('周', ''))
+
+        const exerciseMinutes = this.exerciseRecords
+          .filter(r => dayjs(r.date).isSame(d, 'day'))
+          .reduce((sum, r) => sum + (r.duration || 0), 0)
+        exerciseArr.push(exerciseMinutes)
+
+        const sleepMins = this.sleepRecords
+          .filter(r => dayjs(r.date).isSame(d, 'day'))
+          .reduce((s, r) => s + (r.duration || 0), 0)
+        sleepArr.push((sleepMins / 60).toFixed(1))
+
+        const idx = Math.min(100, Math.round((exerciseMinutes / 60) * 40 + (sleepMins / 480) * 60))
+        healthIdx.push(idx)
+      }
 
       const option = {
-        tooltip: {
-          trigger: 'axis',
-          axisPointer: {
-            type: 'shadow'
-          }
-        },
-        legend: {
-          data: ['运动', '睡眠', '健康指数'],
-          textStyle: {
-            fontSize: 12
-          }
-        },
-        grid: {
-          left: '3%',
-          right: '4%',
-          bottom: '3%',
-          top: '15%',
-          containLabel: true
-        },
-        xAxis: {
-          type: 'category',
-          data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
-          axisLabel: {
-            fontSize: 10
-          }
-        },
-        yAxis: {
-          type: 'value',
-          axisLabel: {
-            fontSize: 10
-          }
-        },
+        tooltip: { trigger: 'axis' },
+        legend: { data: ['运动', '睡眠', '健康指数'] },
+        grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+        xAxis: { type: 'category', data: dates },
+        yAxis: { type: 'value' },
         series: [
-          {
-            name: '运动',
-            type: 'bar',
-            data: [30, 45, 0, 60, 30, 90, 45],
-            itemStyle: {
-              color: '#67C23A'
-            }
-          },
-          {
-            name: '睡眠',
-            type: 'line',
-            data: [7.5, 6.8, 7.2, 8.0, 7.1, 7.8, 7.5],
-            itemStyle: {
-              color: '#409EFF'
-            }
-          },
-          {
-            name: '健康指数',
-            type: 'line',
-            data: [85, 82, 78, 90, 85, 92, 88],
-            itemStyle: {
-              color: '#E6A23C'
-            }
-          }
+          { name: '运动', type: 'bar', data: exerciseArr, itemStyle: { color: '#67C23A' }},
+          { name: '睡眠', type: 'line', data: sleepArr, itemStyle: { color: '#409EFF' }},
+          { name: '健康指数', type: 'line', data: healthIdx, itemStyle: { color: '#E6A23C' }}
         ]
       }
 

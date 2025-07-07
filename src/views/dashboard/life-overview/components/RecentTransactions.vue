@@ -42,60 +42,48 @@
 </template>
 
 <script>
+import { listFinanceRecords } from '@/api/finance'
+import dayjs from 'dayjs'
+
 export default {
   name: 'RecentTransactions',
   data() {
     return {
-      transactions: [
-        {
-          id: 1,
-          type: 'expense',
-          description: '午餐',
-          amount: 35,
-          icon: 'el-icon-food',
-          date: '今天',
-          category: '餐饮'
-        },
-        {
-          id: 2,
-          type: 'income',
-          description: '工资',
-          amount: 8000,
-          icon: 'el-icon-coin',
-          date: '昨天',
-          category: '收入'
-        },
-        {
-          id: 3,
-          type: 'expense',
-          description: '地铁票',
-          amount: 6,
-          icon: 'el-icon-truck',
-          date: '昨天',
-          category: '交通'
-        },
-        {
-          id: 4,
-          type: 'expense',
-          description: '咖啡',
-          amount: 25,
-          icon: 'el-icon-coffee-cup',
-          date: '前天',
-          category: '餐饮'
-        },
-        {
-          id: 5,
-          type: 'expense',
-          description: '电影票',
-          amount: 45,
-          icon: 'el-icon-video-camera',
-          date: '前天',
-          category: '娱乐'
-        }
-      ]
+      transactions: []
     }
   },
+  created() {
+    this.loadTransactions()
+  },
   methods: {
+    async loadTransactions() {
+      try {
+        const { records = [] } = await listFinanceRecords({ page: 1, limit: 100 })
+        const sorted = records.sort((a, b) => new Date(b.date) - new Date(a.date))
+        this.transactions = sorted.slice(0, 5).map(r => ({
+          id: r.id,
+          type: r.type,
+          description: r.description || r.category || '记录',
+          amount: r.amount,
+          icon: r.type === 'income' ? 'el-icon-coin' : 'el-icon-money',
+          date: this.formatRelativeDate(r.date),
+          category: r.category
+        }))
+      } catch (e) {
+        // fallback to localStorage
+        const local = JSON.parse(localStorage.getItem('financeRecords') || '[]')
+        const sorted = local.sort((a, b) => new Date(b.date) - new Date(a.date))
+        this.transactions = sorted.slice(0, 5)
+      }
+    },
+    formatRelativeDate(dateStr) {
+      const d = dayjs(dateStr)
+      const today = dayjs()
+      if (d.isSame(today, 'day')) return '今天'
+      if (d.add(1, 'day').isSame(today, 'day')) return '昨天'
+      if (d.add(2, 'day').isSame(today, 'day')) return '前天'
+      return d.format('MM-DD')
+    },
     viewAll() {
       // 跳转到财务管理页面
       this.$router.push('/finance')
