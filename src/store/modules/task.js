@@ -4,11 +4,11 @@ import { listTasks, createTask, updateTask as updateTaskApi, deleteTask as delet
 const state = {
   // 待办事项
   todos: JSON.parse(localStorage.getItem('todos')) || [
-    { id: 1, text: '开始使用个人生活管理助手', done: false, priority: 'high', category: 'personal', project: null, dueDate: null, createdAt: new Date().toISOString() },
-    { id: 2, text: '添加第一个待办事项', done: false, priority: 'medium', category: 'personal', project: null, dueDate: null, createdAt: new Date().toISOString() },
-    { id: 3, text: '设置个人目标', done: false, priority: 'medium', category: 'personal', project: null, dueDate: null, createdAt: new Date().toISOString() },
-    { id: 4, text: '查看仪表板', done: true, priority: 'low', category: 'personal', project: null, dueDate: null, createdAt: new Date().toISOString() },
-    { id: 5, text: '学习使用功能', done: true, priority: 'medium', category: 'study', project: null, dueDate: null, createdAt: new Date().toISOString() }
+    { id: 1, text: '开始使用个人生活管理助手', done: false, priority: 'high', category: 1, project: null, dueDate: null, createdAt: new Date().toISOString() },
+    { id: 2, text: '添加第一个待办事项', done: false, priority: 'medium', category: 1, project: null, dueDate: null, createdAt: new Date().toISOString() },
+    { id: 3, text: '设置个人目标', done: false, priority: 'medium', category: 1, project: null, dueDate: null, createdAt: new Date().toISOString() },
+    { id: 4, text: '查看仪表板', done: true, priority: 'low', category: 1, project: null, dueDate: null, createdAt: new Date().toISOString() },
+    { id: 5, text: '学习使用功能', done: true, priority: 'medium', category: 3, project: null, dueDate: null, createdAt: new Date().toISOString() }
   ],
 
   // 项目
@@ -58,7 +58,7 @@ const mutations = {
       done: todo.done,
       status: todo.status || (todo.done ? 'completed' : 'pending'),
       priority: todo.priority,
-      category: todo.category || 'personal',
+      category: todo.category || 1,
       project: todo.project || null,
       dueDate: todo.dueDate || null,
       note: todo.note || '',
@@ -166,7 +166,7 @@ const mutations = {
     // 删除分类时，将相关任务的分类设置为默认分类
     state.todos.forEach(todo => {
       if (todo.category === id) {
-        todo.category = 'personal'
+        todo.category = 1
       }
     })
     state.categories = state.categories.filter(category => category.id !== id)
@@ -196,7 +196,7 @@ const actions = {
       done: t.status === 'completed',
       status: t.status,
       priority: mapPriority(t.priority),
-      category: 'personal',
+      category: 1,
       project: t.project_id,
       dueDate: t.due_date,
       note: t.description || '',
@@ -228,7 +228,7 @@ const actions = {
       done: data.status === 'completed',
       status: data.status,
       priority: todo.priority,
-      category: todo.category || 'personal',
+      category: todo.category || 1,
       project: data.project_id,
       dueDate: data.due_date,
       note: data.description || todo.note || '',
@@ -361,7 +361,7 @@ const getters = {
 
     // 按分类筛选
     if (state.filter.category !== 'all') {
-      todos = todos.filter(todo => todo.category === state.filter.category)
+      todos = todos.filter(todo => todo.category === parseInt(state.filter.category))
     }
 
     // 按项目筛选

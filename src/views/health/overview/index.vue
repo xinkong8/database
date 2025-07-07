@@ -68,9 +68,15 @@
           <div slot="header" class="clearfix">
             <span>体重趋势</span>
             <el-button-group style="float: right;">
-              <el-button size="mini" @click="changePeriod('week')">周</el-button>
-              <el-button size="mini" @click="changePeriod('month')">月</el-button>
-              <el-button size="mini" @click="changePeriod('quarter')">季</el-button>
+              <el-button size="mini" :type="currentPeriod === 'week' ? 'primary' : ''" @click="changePeriod('week')">
+                最近一周
+              </el-button>
+              <el-button size="mini" :type="currentPeriod === 'month' ? 'primary' : ''" @click="changePeriod('month')">
+                最近一月
+              </el-button>
+              <el-button size="mini" :type="currentPeriod === 'quarter' ? 'primary' : ''" @click="changePeriod('quarter')">
+                最近三月
+              </el-button>
             </el-button-group>
           </div>
           <div id="weightTrendChart" style="height:300px;" />
@@ -213,21 +219,93 @@ export default {
       const dom = document.getElementById('weightTrendChart')
       if (!dom) return
       this.weightChart = echarts.init(dom)
-      const dates = this.$store.getters['health/weightRecords'].slice().reverse().map(r => String(r.date).split('T')[0].slice(5))
-      const weights = this.$store.getters['health/weightRecords'].slice().reverse().map(r => r.weight)
-      const option = {
-        tooltip: { trigger: 'axis' },
-        xAxis: { type: 'category', data: dates },
-        yAxis: { type: 'value', name: 'kg' },
-        series: [
-          {
-            data: weights,
-            type: 'line',
-            smooth: true
-          }
-        ]
+
+      const records = this.$store.getters['health/weightRecords'].slice()
+
+      // 根据 currentPeriod 过滤数据
+      const now = new Date()
+      let startDate = null
+      switch (this.currentPeriod) {
+        case 'week':
+          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+          break
+        case 'month':
+          startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+          break
+        case 'quarter':
+          startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+          break
+        default:
+          startDate = null
       }
-      this.weightChart.setOption(option)
+
+      let data = records
+      if (startDate) {
+        data = data.filter(r => new Date(r.date) >= startDate)
+      }
+
+      // 按时间升序排序
+      data.sort((a, b) => new Date(a.date) - new Date(b.date))
+
+      const dates = data.map(item => String(item.date).split('T')[0].slice(5)) // MM-DD
+      const weights = data.map(item => item.weight)
+
+      // 动态 Y 轴范围
+      let minW = Math.min(...weights)
+      let maxW = Math.max(...weights)
+      if (minW === maxW) {
+        minW -= 1
+        maxW += 1
+      } else {
+        const pad = Math.max(0.5, (maxW - minW) * 0.1)
+        minW -= pad
+        maxW += pad
+      }
+
+      const option = {
+        title: {
+          text: '体重变化趋势',
+          left: 'center',
+          textStyle: { fontSize: 16, color: '#303133' }
+        },
+        tooltip: {
+          trigger: 'axis',
+          formatter(params) {
+            const d = params[0]
+            return `日期: ${d.axisValue}<br/>体重: ${d.value} kg`
+          }
+        },
+        xAxis: {
+          type: 'category',
+          data: dates,
+          axisLabel: { formatter: v => v }
+        },
+        yAxis: {
+          type: 'value',
+          name: '体重 (kg)',
+          min: Math.floor(minW * 10) / 10,
+          max: Math.ceil(maxW * 10) / 10,
+          axisLabel: { formatter: '{value} kg' }
+        },
+        series: [{
+          data: weights,
+          type: 'line',
+          smooth: true,
+          symbol: 'circle',
+          symbolSize: 8,
+          lineStyle: { width: 3, color: '#409EFF' },
+          itemStyle: { color: '#409EFF' },
+          areaStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: 'rgba(64, 158, 255, 0.3)' },
+              { offset: 1, color: 'rgba(64, 158, 255, 0.1)' }
+            ])
+          }
+        }],
+        grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true }
+      }
+
+      this.weightChart.setOption(option, true)
     },
     drawExercisePie() {
       if (!echarts.init) return
@@ -275,6 +353,7 @@ export default {
     changePeriod(period) {
       this.currentPeriod = period
       this.$message.success(`已切换到${period === 'week' ? '周' : period === 'month' ? '月' : '季'}视图`)
+      this.drawWeightTrend()
     }
   }
 }
