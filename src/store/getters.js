@@ -46,6 +46,28 @@ const getters = {
   weeklyExerciseCount: state => state.health?.weeklyExerciseCount || 0,
   averageSleepDuration: state => state.health?.averageSleepDuration || 0,
   healthTrend: state => state.health?.healthTrend || {},
-  healthDashboardData: state => state.health?.dashboardData || {}
+  healthDashboardData: state => state.health?.dashboardData || {},
+
+  // 财务统计
+  expenseToday: () => {
+    const records = JSON.parse(localStorage.getItem('financeRecords') || '[]')
+    const today = new Date().toISOString().slice(0, 10)
+    return records.filter(r => r.type === 'expense' && String(r.date).startsWith(today))
+      .reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0)
+  },
+  expenseThisMonth: () => {
+    const records = JSON.parse(localStorage.getItem('financeRecords') || '[]')
+    const monthStr = new Date().toISOString().slice(0, 7) // YYYY-MM
+    return records.filter(r => r.type === 'expense' && String(r.date).startsWith(monthStr))
+      .reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0)
+  },
+
+  // 今日步数（示例：运动记录条数 * 1000）
+  todayStepCount: state => {
+    const today = new Date().toISOString().slice(0, 10)
+    const exercises = state.health?.exerciseRecords || []
+    const count = exercises.filter(r => String(r.date).startsWith(today)).length
+    return count * 1000
+  }
 }
 export default getters

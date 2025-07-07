@@ -1,4 +1,3 @@
-
 <template>
   <div class="recent-transactions">
     <el-table :data="transactions" style="width: 100%;" size="small">
@@ -107,6 +106,8 @@ export default {
 
 <style lang="scss" scoped>
 .recent-transactions {
+  max-height: 260px;
+  overflow-y: auto;
   .transaction-item {
     display: flex;
     align-items: center;

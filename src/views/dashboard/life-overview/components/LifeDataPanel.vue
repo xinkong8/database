@@ -1,7 +1,7 @@
 <template>
   <el-row :gutter="40" class="panel-group">
     <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
-      <div class="card-panel" @click="handleSetChartData('tasks')">
+      <div class="card-panel" @click="goto('/task/overview')" @dblclick.stop="handleSetChartData('tasks')">
         <div class="card-panel-icon-wrapper icon-tasks">
           <svg-icon icon-class="list" class-name="card-panel-icon" />
         </div>
@@ -9,13 +9,13 @@
           <div class="card-panel-text">
             待办任务
           </div>
-          <count-to :start-val="0" :end-val="12" :duration="2000" class="card-panel-num" />
+          <count-to :start-val="0" :end-val="tasksCount" :duration="1500" class="card-panel-num" />
           <div class="card-panel-unit">项</div>
         </div>
       </div>
     </el-col>
     <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
-      <div class="card-panel" @click="handleSetChartData('finance')">
+      <div class="card-panel" @click="goto('/finance/overview')" @dblclick.stop="handleSetChartData('finance')">
         <div class="card-panel-icon-wrapper icon-finance">
           <svg-icon icon-class="money" class-name="card-panel-icon" />
         </div>
@@ -23,13 +23,13 @@
           <div class="card-panel-text">
             本月支出
           </div>
-          <count-to :start-val="0" :end-val="3150" :duration="2500" class="card-panel-num" />
+          <count-to :start-val="0" :end-val="monthExpense" :duration="1500" class="card-panel-num" />
           <div class="card-panel-unit">元</div>
         </div>
       </div>
     </el-col>
     <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
-      <div class="card-panel" @click="handleSetChartData('health')">
+      <div class="card-panel" @click="goto('/health/overview')" @dblclick.stop="handleSetChartData('health')">
         <div class="card-panel-icon-wrapper icon-health">
           <svg-icon icon-class="star" class-name="card-panel-icon" />
         </div>
@@ -37,13 +37,13 @@
           <div class="card-panel-text">
             今日步数
           </div>
-          <count-to :start-val="0" :end-val="8300" :duration="3000" class="card-panel-num" />
+          <count-to :start-val="0" :end-val="todaySteps" :duration="1500" class="card-panel-num" />
           <div class="card-panel-unit">步</div>
         </div>
       </div>
     </el-col>
     <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
-      <div class="card-panel" @click="handleSetChartData('habits')">
+      <div class="card-panel" @click="goto('/task/habits')" @dblclick.stop="handleSetChartData('habits')">
         <div class="card-panel-icon-wrapper icon-habits">
           <svg-icon icon-class="chart" class-name="card-panel-icon" />
         </div>
@@ -51,7 +51,7 @@
           <div class="card-panel-text">
             习惯完成
           </div>
-          <count-to :start-val="0" :end-val="5" :duration="2000" class="card-panel-num" />
+          <count-to :start-val="0" :end-val="habitsDone" :duration="1500" class="card-panel-num" />
           <div class="card-panel-unit">/ 7</div>
         </div>
       </div>
@@ -60,16 +60,62 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import CountTo from 'vue-count-to'
+import { listFinanceRecords } from '@/api/finance'
+import dayjs from 'dayjs'
 
 export default {
   name: 'LifeDataPanel',
-  components: {
-    CountTo
+  components: { CountTo },
+  data() {
+    return {
+      monthExpense: 0,
+      todaySteps: 0,
+      habitsDone: 0
+    }
+  },
+  computed: {
+    ...mapGetters({
+      taskStats: 'task/taskStats'
+    }),
+    tasksCount() {
+      // 显示待完成任务数量
+      return this.taskStats ? this.taskStats.active : 0
+    }
+  },
+  created() {
+    this.loadStats()
   },
   methods: {
     handleSetChartData(type) {
       this.$emit('handleSetChartData', type)
+    },
+    goto(path) {
+      this.$router.push(path)
+    },
+    async loadStats() {
+      // 1. 本月支出
+      try {
+        const startOfMonth = dayjs().startOf('month').format('YYYY-MM-DD')
+        const endDate = dayjs().format('YYYY-MM-DD')
+        const { records = [] } = await listFinanceRecords({ page: 1, limit: 2000, type: 'expense', startDate: startOfMonth, endDate })
+        this.monthExpense = records.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0)
+      } catch (e) {
+        /* ignore */
+      }
+
+      // 2. 今日步数（示例：将今日运动记录条数 * 1000，当作步数）
+      try {
+        const today = dayjs().format('YYYY-MM-DD')
+        await this.$store.dispatch('health/fetchExerciseRecords', { page: 1, limit: 500, startDate: today, endDate: today })
+        const count = this.$store.getters['health/exerciseRecords'].filter(r => dayjs(r.date).format('YYYY-MM-DD') === today).length
+        this.todaySteps = count * 1000
+      } catch (e) {
+        /* ignore */
+      }
+
+      // 3. 习惯完成（暂时 0，留待习惯模块接入）
     }
   }
 }

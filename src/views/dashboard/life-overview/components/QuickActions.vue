@@ -1,4 +1,3 @@
-
 <template>
   <div class="quick-actions">
     <div class="action-grid">
@@ -19,21 +18,25 @@
       <h5>今日统计</h5>
       <div class="stat-item">
         <span class="stat-label">完成任务</span>
-        <span class="stat-value">3/8</span>
+        <span class="stat-value">{{ tasksDoneToday }} / {{ tasksTotalToday }}</span>
       </div>
       <div class="stat-item">
         <span class="stat-label">支出金额</span>
-        <span class="stat-value expense">¥66</span>
+        <span class="stat-value expense">¥{{ expenseToday }}</span>
       </div>
       <div class="stat-item">
         <span class="stat-label">运动时长</span>
-        <span class="stat-value">30分钟</span>
+        <span class="stat-value">{{ exerciseMinutes }}分钟</span>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import dayjs from 'dayjs'
+import { listFinanceRecords } from '@/api/finance'
+import { mapGetters } from 'vuex'
+
 export default {
   name: 'QuickActions',
   data() {
@@ -67,8 +70,23 @@ export default {
           color: '#9b59b6',
           action: 'addNote'
         }
-      ]
+      ],
+      tasksDoneToday: 0,
+      tasksTotalToday: 0,
+      expenseToday: 0,
+      exerciseMinutes: 0
     }
+  },
+  computed: {
+    ...mapGetters({
+      allTodos: 'task/allTodos',
+      exerciseRecords: 'health/exerciseRecords'
+    })
+  },
+  created() {
+    this.calculateTaskStats()
+    this.loadExpense()
+    this.loadExercise()
   },
   methods: {
     handleAction(action) {
@@ -136,6 +154,32 @@ export default {
       }).catch(() => {
         // 取消操作
       })
+    },
+
+    calculateTaskStats() {
+      const todayStr = dayjs().format('YYYY-MM-DD')
+      const todays = this.allTodos.filter(t => dayjs(t.createdAt).format('YYYY-MM-DD') === todayStr)
+      this.tasksTotalToday = todays.length
+      this.tasksDoneToday = todays.filter(t => t.done).length
+    },
+
+    async loadExpense() {
+      try {
+        const today = dayjs().format('YYYY-MM-DD')
+        const { records = [] } = await listFinanceRecords({ page: 1, limit: 500, type: 'expense', startDate: today, endDate: today })
+        this.expenseToday = records.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0).toFixed(0)
+      } catch (e) { /* ignore */ }
+    },
+
+    async loadExercise() {
+      try {
+        const today = dayjs().format('YYYY-MM-DD')
+        await this.$store.dispatch('health/fetchExerciseRecords', { page: 1, limit: 500, startDate: today, endDate: today })
+        const totalMinutes = this.exerciseRecords
+          .filter(r => dayjs(r.date).format('YYYY-MM-DD') === today)
+          .reduce((sum, r) => sum + (r.duration || 0), 0)
+        this.exerciseMinutes = totalMinutes
+      } catch (e) { /* ignore */ }
     }
   }
 }

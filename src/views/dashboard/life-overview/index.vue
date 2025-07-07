@@ -99,6 +99,15 @@ import HealthDataPanel from './components/HealthDataPanel'
 import Driver from 'driver.js'
 import 'driver.js/dist/driver.min.css'
 import steps from '@/views/guide/steps'
+import dayjs from 'dayjs'
+
+function getLastSevenDates() {
+  const arr = []
+  for (let i = 6; i >= 0; i--) {
+    arr.push(dayjs().subtract(i, 'day').format('MM-DD'))
+  }
+  return arr
+}
 
 const lifeChartData = {
   tasks: {
@@ -159,10 +168,36 @@ export default {
   },
   mounted() {
     this.driver = new Driver()
+    // 先拉取任务数据，再生成默认折线图
+    this.$store.dispatch('task/fetchTodos').finally(() => {
+      this.chartData = this.generateTaskChartData()
+    })
   },
   methods: {
     handleSetChartData(type) {
-      this.chartData = lifeChartData[type]
+      switch (type) {
+        case 'tasks':
+          this.chartData = this.generateTaskChartData()
+          break
+        default:
+          this.chartData = lifeChartData[type]
+      }
+    },
+    generateTaskChartData() {
+      const dates = getLastSevenDates()
+      const todos = this.$store.getters['task/allTodos'] || []
+      const totalPerDay = Array(7).fill(0)
+      const completedPerDay = Array(7).fill(0)
+
+      todos.forEach(t => {
+        const d = dayjs(t.createdAt || t.date).format('MM-DD')
+        const idx = dates.indexOf(d)
+        if (idx !== -1) {
+          totalPerDay[idx] += 1
+          if (t.done) completedPerDay[idx] += 1
+        }
+      })
+      return { expectedData: totalPerDay, actualData: completedPerDay, weeks: dates }
     },
     guide() {
       this.showGuideDialog = false
@@ -239,6 +274,13 @@ export default {
     padding: 20px;
     box-shadow: 0 2px 12px rgba(0,0,0,0.05);
     height: 100%;
+    display: flex;
+    flex-direction: column;
+    .el-table,
+    .quick-actions,
+    .health-data-panel {
+      flex: 1 1 auto;
+    }
     transition: all 0.3s ease;
 
     &:hover {
@@ -308,6 +350,30 @@ export default {
 
       .current-date {
         font-size: 14px;
+      }
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .life-overview-container {
+    padding: 12px;
+
+    .chart-section {
+      .el-col {
+        margin-bottom: 16px;
+      }
+    }
+
+    .chart-wrapper, .section-wrapper {
+      padding: 12px !important;
+    }
+
+    .welcome-section {
+      padding: 16px;
+
+      .welcome-title {
+        font-size: 18px;
       }
     }
   }
