@@ -1,7 +1,7 @@
 {
   "name": "life-manager-backend",
   "version": "1.0.0",
-  "description": "个人生活管理助手后端API",
+  "description": "军校学员个人生活助手后端API",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",

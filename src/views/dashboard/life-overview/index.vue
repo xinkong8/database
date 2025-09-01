@@ -17,7 +17,7 @@
       <line-chart :chart-data="chartData" />
     </el-row>
 
-    <!-- 生活统计图表区域（已隐藏） -->
+    <!-- 生活统计图表区域 -->
     <el-row v-if="false" :gutter="32">
       <el-col :xs="24" :sm="24" :lg="8">
         <div class="chart-wrapper">
@@ -65,9 +65,9 @@
     </el-row>
 
     <!-- 首次使用引导 -->
-    <el-dialog :visible.sync="showGuideDialog" title="欢迎使用个人生活管理助手" width="600px" :close-on-click-modal="false">
+    <el-dialog :visible.sync="showGuideDialog" title="欢迎使用军校学员个人生活助手" width="600px" :close-on-click-modal="false">
       <div class="guide-content">
-        <p>🎉 欢迎使用个人生活管理助手！</p>
+        <p>🎉 欢迎使用军校学员个人生活助手！</p>
         <p>📋 本系统帮助您管理日常生活的方方面面：</p>
         <ul>
           <li>💰 财务记账和预算管理</li>

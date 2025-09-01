@@ -1,5 +1,5 @@
 module.exports = {
-  title: '个人生活管理助手',
+  title: '军校学员个人生活助手',
 
   /**
    * @type {boolean} true | false

@@ -1,4 +1,4 @@
-# 个人生活管理助手（Personal Life Management Assistant）
+# 军校学员个人生活助手（Personal Life Management Assistant）
 
 > 一个帮助您集中管理日常任务、财务、健康数据等信息的全栈应用。前端基于 **Vue 2 + Element-UI**，后端基于 **Node.js + Express + MySQL**，开箱即用。
 
@@ -62,7 +62,7 @@ root /
 ### 2. 克隆项目
 
 ```bash
-git clone <your-git-repo-url>
+git clone https://github.com/xinkong8/database.git
 cd database        # 进入项目根目录
 ```
 

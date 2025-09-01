@@ -15,7 +15,7 @@ export default {
     },
     text: {
       type: String,
-      default: '个人生活管理助手'
+      default: '军校学员个人生活助手'
     }
   }
 }

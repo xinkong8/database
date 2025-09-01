@@ -1,0 +1,286 @@
+Date : 2025-07-10 20:31:29
+Directory : d:\codes\database
+Total : 182 files,  9603 codes, 909 comments, 1460 blanks, all 11972 lines
+
+Languages
++--------------------+------------+------------+------------+------------+------------+
+| language           | files      | code       | comment    | blank      | total      |
++--------------------+------------+------------+------------+------------+------------+
+| JavaScript         |        107 |      7,909 |        821 |      1,144 |      9,874 |
+| SCSS               |          9 |        920 |         43 |        146 |      1,109 |
+| Markdown           |          7 |        455 |         28 |        144 |        627 |
+| JSON               |          2 |        144 |          0 |          2 |        146 |
+| Handlebars         |          3 |         59 |          0 |         12 |         71 |
+| XML                |         46 |         46 |          0 |          0 |         46 |
+| PostCSS            |          2 |         26 |          0 |          1 |         27 |
+| HTML               |          1 |         14 |          1 |          1 |         16 |
+| YAML               |          3 |         12 |         14 |          8 |         34 |
+| JSON with Comments |          1 |          9 |          0 |          0 |          9 |
+| Properties         |          1 |          9 |          2 |          2 |         13 |
++--------------------+------------+------------+------------+------------+------------+
+
+Directories
++------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                               | files      | code       | comment    | blank      | total      |
++------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                  |        182 |      9,603 |        909 |      1,460 |     11,972 |
+| . (Files)                                                                          |         10 |        571 |         30 |         59 |        660 |
+| .github                                                                            |          4 |         31 |         29 |         23 |         83 |
+| .github (Files)                                                                    |          1 |          2 |          1 |          2 |          5 |
+| .github\ISSUE_TEMPLATE                                                             |          3 |         29 |         28 |         21 |         78 |
+| backend                                                                            |         13 |      2,702 |        261 |        498 |      3,461 |
+| backend (Files)                                                                    |          5 |        430 |         68 |         97 |        595 |
+| backend\middleware                                                                 |          1 |         78 |          9 |         15 |        102 |
+| backend\models                                                                     |          1 |        283 |         26 |         34 |        343 |
+| backend\routes                                                                     |          6 |      1,911 |        158 |        352 |      2,421 |
+| build                                                                              |          1 |         28 |          0 |          8 |         36 |
+| docs                                                                               |          3 |        316 |          0 |         81 |        397 |
+| mock                                                                               |          8 |        691 |         36 |         73 |        800 |
+| mock (Files)                                                                       |          6 |        365 |         30 |         51 |        446 |
+| mock\role                                                                          |          2 |        326 |          6 |         22 |        354 |
+| plop-templates                                                                     |          7 |        227 |          0 |         22 |        249 |
+| plop-templates (Files)                                                             |          1 |          2 |          0 |          1 |          3 |
+| plop-templates\component                                                           |          2 |         76 |          0 |          7 |         83 |
+| plop-templates\store                                                               |          2 |         73 |          0 |          7 |         80 |
+| plop-templates\view                                                                |          2 |         76 |          0 |          7 |         83 |
+| public                                                                             |          1 |         14 |          1 |          1 |         16 |
+| src                                                                                |        128 |      4,876 |        552 |        682 |      6,110 |
+| src (Files)                                                                        |          3 |         89 |         47 |         32 |        168 |
+| src\api                                                                            |         11 |        489 |         21 |         78 |        588 |
+| src\assets                                                                         |          1 |          1 |          0 |          0 |          1 |
+| src\assets\custom-theme                                                            |          1 |          1 |          0 |          0 |          1 |
+| src\components                                                                     |          9 |        410 |         29 |         26 |        465 |
+| src\components\Charts                                                              |          1 |         48 |          4 |          5 |         57 |
+| src\components\Charts\mixins                                                       |          1 |         48 |          4 |          5 |         57 |
+| src\components\ImageCropper                                                        |          4 |        280 |         15 |          6 |        301 |
+| src\components\ImageCropper\utils                                                  |          4 |        280 |         15 |          6 |        301 |
+| src\components\MarkdownEditor                                                      |          1 |         30 |          1 |          1 |         32 |
+| src\components\Tinymce                                                             |          3 |         52 |          9 |         14 |         75 |
+| src\directive                                                                      |         12 |        370 |         21 |         72 |        463 |
+| src\directive (Files)                                                              |          1 |         72 |          6 |         14 |         92 |
+| src\directive\clipboard                                                            |          2 |         57 |          1 |          6 |         64 |
+| src\directive\el-drag-dialog                                                       |          2 |         66 |          7 |         19 |         92 |
+| src\directive\el-table                                                             |          2 |         37 |          7 |         12 |         56 |
+| src\directive\permission                                                           |          2 |         36 |          0 |         10 |         46 |
+| src\directive\waves                                                                |          3 |        102 |          0 |         11 |        113 |
+| src\filters                                                                        |          1 |         39 |         24 |          6 |         69 |
+| src\icons                                                                          |         48 |         57 |         14 |          8 |         79 |
+| src\icons (Files)                                                                  |          2 |         11 |         14 |          8 |         33 |
+| src\icons\svg                                                                      |         46 |         46 |          0 |          0 |         46 |
+| src\layout                                                                         |          3 |         69 |          4 |          6 |         79 |
+| src\layout\components                                                              |          2 |         29 |          2 |          2 |         33 |
+| src\layout\components (Files)                                                      |          1 |          5 |          0 |          1 |          6 |
+| src\layout\components\Sidebar                                                      |          1 |         24 |          2 |          1 |         27 |
+| src\layout\mixin                                                                   |          1 |         40 |          2 |          4 |         46 |
+| src\router                                                                         |          6 |        321 |         38 |         32 |        391 |
+| src\router (Files)                                                                 |          1 |        125 |         36 |         16 |        177 |
+| src\router\modules                                                                 |          5 |        196 |          2 |         16 |        214 |
+| src\store                                                                          |         10 |      1,329 |         97 |        168 |      1,594 |
+| src\store (Files)                                                                  |          2 |         79 |          9 |         12 |        100 |
+| src\store\modules                                                                  |          8 |      1,250 |         88 |        156 |      1,494 |
+| src\styles                                                                         |          8 |        611 |         32 |        145 |        788 |
+| src\utils                                                                          |         10 |        461 |        191 |         73 |        725 |
+| src\vendor                                                                         |          2 |        202 |         16 |         28 |        246 |
+| src\views                                                                          |          4 |        428 |         18 |          8 |        454 |
+| src\views\dashboard                                                                |          2 |        359 |         15 |          3 |        377 |
+| src\views\dashboard\life-overview                                                  |          2 |        359 |         15 |          3 |        377 |
+| src\views\dashboard\life-overview\components                                       |          2 |        359 |         15 |          3 |        377 |
+| src\views\dashboard\life-overview\components\TodoList                              |          1 |        309 |         11 |          1 |        321 |
+| src\views\dashboard\life-overview\components\mixins                                |          1 |         50 |          4 |          2 |         56 |
+| src\views\finance                                                                  |          1 |         25 |          3 |          3 |         31 |
+| src\views\guide                                                                    |          1 |         44 |          0 |          2 |         46 |
+| tests                                                                              |          7 |        147 |          0 |         13 |        160 |
+| tests\unit                                                                         |          7 |        147 |          0 |         13 |        160 |
+| tests\unit (Files)                                                                 |          1 |          5 |          0 |          1 |          6 |
+| tests\unit\components                                                              |          2 |         40 |          0 |          2 |         42 |
+| tests\unit\utils                                                                   |          4 |        102 |          0 |         10 |        112 |
++------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| filename                                                                           | language           | code       | comment    | blank      | total      |
++------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| d:\codes\database\.eslintrc.js                                                     | JavaScript         |        195 |          2 |          2 |        199 |
+| d:\codes\database\.github\FUNDING.yml                                              | YAML               |          2 |          1 |          2 |          5 |
+| d:\codes\database\.github\ISSUE_TEMPLATE\bug_report.md                             | Markdown           |         12 |         13 |          9 |         34 |
+| d:\codes\database\.github\ISSUE_TEMPLATE\feature_request.md                        | Markdown           |          5 |          0 |          3 |          8 |
+| d:\codes\database\.github\ISSUE_TEMPLATE\question.md                               | Markdown           |         12 |         15 |          9 |         36 |
+| d:\codes\database\.travis.yml                                                      | YAML               |          5 |          0 |          1 |          6 |
+| d:\codes\database\README.md                                                        | Markdown           |        110 |          0 |         42 |        152 |
+| d:\codes\database\babel.config.js                                                  | JavaScript         |         10 |          4 |          1 |         15 |
+| d:\codes\database\backend\.env                                                     | Properties         |          9 |          2 |          2 |         13 |
+| d:\codes\database\backend\app.js                                                   | JavaScript         |         59 |          7 |         10 |         76 |
+| d:\codes\database\backend\middleware\auth.js                                       | JavaScript         |         78 |          9 |         15 |        102 |
+| d:\codes\database\backend\models\database.js                                       | JavaScript         |        283 |         26 |         34 |        343 |
+| d:\codes\database\backend\package.json                                             | JSON               |         32 |          0 |          1 |         33 |
+| d:\codes\database\backend\routes\auth.js                                           | JavaScript         |        194 |         20 |         34 |        248 |
+| d:\codes\database\backend\routes\dashboard.js                                      | JavaScript         |        237 |         25 |         34 |        296 |
+| d:\codes\database\backend\routes\finance.js                                        | JavaScript         |        436 |         29 |         87 |        552 |
+| d:\codes\database\backend\routes\health.js                                         | JavaScript         |        468 |         31 |         85 |        584 |
+| d:\codes\database\backend\routes\projects.js                                       | JavaScript         |        161 |         24 |         39 |        224 |
+| d:\codes\database\backend\routes\tasks.js                                          | JavaScript         |        415 |         29 |         73 |        517 |
+| d:\codes\database\backend\test-api-full.js                                         | JavaScript         |        256 |         52 |         68 |        376 |
+| d:\codes\database\backend\test-api.js                                              | JavaScript         |         74 |          7 |         16 |         97 |
+| d:\codes\database\build\index.js                                                   | JavaScript         |         28 |          0 |          8 |         36 |
+| d:\codes\database\docs\crud_operations_guide.md                                    | Markdown           |        104 |          0 |         34 |        138 |
+| d:\codes\database\docs\database_project_overview.md                                | Markdown           |        154 |          0 |         29 |        183 |
+| d:\codes\database\docs\important_files_overview.md                                 | Markdown           |         58 |          0 |         18 |         76 |
+| d:\codes\database\jest.config.js                                                   | JavaScript         |         23 |          1 |          1 |         25 |
+| d:\codes\database\jsconfig.json                                                    | JSON with Comments |          9 |          0 |          0 |          9 |
+| d:\codes\database\mock\article.js                                                  | JavaScript         |        103 |          0 |         14 |        117 |
+| d:\codes\database\mock\index.js                                                    | JavaScript         |         47 |          6 |          8 |         61 |
+| d:\codes\database\mock\mock-server.js                                              | JavaScript         |         65 |          6 |         11 |         82 |
+| d:\codes\database\mock\remote-search.js                                            | JavaScript         |         45 |          2 |          5 |         52 |
+| d:\codes\database\mock\role\index.js                                               | JavaScript         |         86 |          5 |          8 |         99 |
+| d:\codes\database\mock\role\routes.js                                              | JavaScript         |        240 |          1 |         14 |        255 |
+| d:\codes\database\mock\user.js                                                     | JavaScript         |         70 |          5 |         10 |         85 |
+| d:\codes\database\mock\utils.js                                                    | JavaScript         |         35 |         11 |          3 |         49 |
+| d:\codes\database\package.json                                                     | JSON               |        112 |          0 |          1 |        113 |
+| d:\codes\database\plop-templates\component\index.hbs                               | Handlebars         |         23 |          0 |          4 |         27 |
+| d:\codes\database\plop-templates\component\prompt.js                               | JavaScript         |         53 |          0 |          3 |         56 |
+| d:\codes\database\plop-templates\store\index.hbs                                   | Handlebars         |         13 |          0 |          4 |         17 |
+| d:\codes\database\plop-templates\store\prompt.js                                   | JavaScript         |         60 |          0 |          3 |         63 |
+| d:\codes\database\plop-templates\utils.js                                          | JavaScript         |          2 |          0 |          1 |          3 |
+| d:\codes\database\plop-templates\view\index.hbs                                    | Handlebars         |         23 |          0 |          4 |         27 |
+| d:\codes\database\plop-templates\view\prompt.js                                    | JavaScript         |         53 |          0 |          3 |         56 |
+| d:\codes\database\plopfile.js                                                      | JavaScript         |          8 |          0 |          2 |         10 |
+| d:\codes\database\postcss.config.js                                                | JavaScript         |          5 |          0 |          1 |          6 |
+| d:\codes\database\public\index.html                                                | HTML               |         14 |          1 |          1 |         16 |
+| d:\codes\database\src\api\article.js                                               | JavaScript         |         36 |          0 |          6 |         42 |
+| d:\codes\database\src\api\budget.js                                                | JavaScript         |         22 |          3 |          4 |         29 |
+| d:\codes\database\src\api\dashboard.js                                             | JavaScript         |         37 |          6 |          7 |         50 |
+| d:\codes\database\src\api\finance.js                                               | JavaScript         |         34 |          5 |          6 |         45 |
+| d:\codes\database\src\api\health.js                                                | JavaScript         |        182 |          7 |         23 |        212 |
+| d:\codes\database\src\api\healthNew.js                                             | JavaScript         |         34 |          0 |          6 |         40 |
+| d:\codes\database\src\api\project.js                                               | JavaScript         |         34 |          0 |          6 |         40 |
+| d:\codes\database\src\api\remote-search.js                                         | JavaScript         |         15 |          0 |          3 |         18 |
+| d:\codes\database\src\api\role.js                                                  | JavaScript         |         33 |          0 |          6 |         39 |
+| d:\codes\database\src\api\task.js                                                  | JavaScript         |         34 |          0 |          6 |         40 |
+| d:\codes\database\src\api\user.js                                                  | JavaScript         |         28 |          0 |          5 |         33 |
+| d:\codes\database\src\assets\custom-theme\index.css                                | PostCSS            |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\components\Charts\mixins\resize.js                           | JavaScript         |         48 |          4 |          5 |         57 |
+| d:\codes\database\src\components\ImageCropper\utils\data2blob.js                   | JavaScript         |         11 |          8 |          1 |         20 |
+| d:\codes\database\src\components\ImageCropper\utils\effectRipple.js                | JavaScript         |         32 |          7 |          1 |         40 |
+| d:\codes\database\src\components\ImageCropper\utils\language.js                    | JavaScript         |        230 |          0 |          3 |        233 |
+| d:\codes\database\src\components\ImageCropper\utils\mimes.js                       | JavaScript         |          7 |          0 |          1 |          8 |
+| d:\codes\database\src\components\MarkdownEditor\default-options.js                 | JavaScript         |         30 |          1 |          1 |         32 |
+| d:\codes\database\src\components\Tinymce\dynamicLoadScript.js                      | JavaScript         |         48 |          4 |          8 |         60 |
+| d:\codes\database\src\components\Tinymce\plugins.js                                | JavaScript         |          2 |          3 |          3 |          8 |
+| d:\codes\database\src\components\Tinymce\toolbar.js                                | JavaScript         |          2 |          2 |          3 |          7 |
+| d:\codes\database\src\directive\clipboard\clipboard.js                             | JavaScript         |         47 |          1 |          2 |         50 |
+| d:\codes\database\src\directive\clipboard\index.js                                 | JavaScript         |         10 |          0 |          4 |         14 |
+| d:\codes\database\src\directive\el-drag-dialog\drag.js                             | JavaScript         |         56 |          7 |         15 |         78 |
+| d:\codes\database\src\directive\el-drag-dialog\index.js                            | JavaScript         |         10 |          0 |          4 |         14 |
+| d:\codes\database\src\directive\el-table\adaptive.js                               | JavaScript         |         27 |          7 |          8 |         42 |
+| d:\codes\database\src\directive\el-table\index.js                                  | JavaScript         |         10 |          0 |          4 |         14 |
+| d:\codes\database\src\directive\permission\index.js                                | JavaScript         |         10 |          0 |          4 |         14 |
+| d:\codes\database\src\directive\permission\permission.js                           | JavaScript         |         26 |          0 |          6 |         32 |
+| d:\codes\database\src\directive\sticky.js                                          | JavaScript         |         72 |          6 |         14 |         92 |
+| d:\codes\database\src\directive\waves\index.js                                     | JavaScript         |         10 |          0 |          4 |         14 |
+| d:\codes\database\src\directive\waves\waves.css                                    | PostCSS            |         25 |          0 |          1 |         26 |
+| d:\codes\database\src\directive\waves\waves.js                                     | JavaScript         |         67 |          0 |          6 |         73 |
+| d:\codes\database\src\filters\index.js                                             | JavaScript         |         39 |         24 |          6 |         69 |
+| d:\codes\database\src\icons\index.js                                               | JavaScript         |          6 |          1 |          3 |         10 |
+| d:\codes\database\src\icons\svg\404.svg                                            | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\bug.svg                                            | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\chart.svg                                          | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\clipboard.svg                                      | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\component.svg                                      | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\dashboard.svg                                      | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\documentation.svg                                  | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\drag.svg                                           | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\edit.svg                                           | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\education.svg                                      | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\email.svg                                          | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\example.svg                                        | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\excel.svg                                          | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\exit-fullscreen.svg                                | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\eye-open.svg                                       | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\eye.svg                                            | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\form.svg                                           | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\fullscreen.svg                                     | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\guide.svg                                          | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\icon.svg                                           | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\international.svg                                  | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\language.svg                                       | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\link.svg                                           | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\list.svg                                           | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\lock.svg                                           | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\message.svg                                        | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\money.svg                                          | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\nested.svg                                         | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\password.svg                                       | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\pdf.svg                                            | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\people.svg                                         | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\peoples.svg                                        | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\qq.svg                                             | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\search.svg                                         | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\shopping.svg                                       | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\size.svg                                           | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\skill.svg                                          | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\star.svg                                           | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\tab.svg                                            | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\table.svg                                          | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\theme.svg                                          | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\tree-table.svg                                     | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\tree.svg                                           | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\user.svg                                           | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\wechat.svg                                         | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svg\zip.svg                                            | XML                |          1 |          0 |          0 |          1 |
+| d:\codes\database\src\icons\svgo.yml                                               | YAML               |          5 |         13 |          5 |         23 |
+| d:\codes\database\src\layout\components\Sidebar\FixiOSBug.js                       | JavaScript         |         24 |          2 |          1 |         27 |
+| d:\codes\database\src\layout\components\index.js                                   | JavaScript         |          5 |          0 |          1 |          6 |
+| d:\codes\database\src\layout\mixin\ResizeHandler.js                                | JavaScript         |         40 |          2 |          4 |         46 |
+| d:\codes\database\src\main.js                                                      | JavaScript         |         34 |          9 |         14 |         57 |
+| d:\codes\database\src\permission.js                                                | JavaScript         |         47 |         16 |         12 |         75 |
+| d:\codes\database\src\router\index.js                                              | JavaScript         |        125 |         36 |         16 |        177 |
+| d:\codes\database\src\router\modules\charts.js                                     | JavaScript         |         32 |          1 |          4 |         37 |
+| d:\codes\database\src\router\modules\finance.js                                    | JavaScript         |         44 |          0 |          3 |         47 |
+| d:\codes\database\src\router\modules\health.js                                     | JavaScript         |         38 |          0 |          3 |         41 |
+| d:\codes\database\src\router\modules\table.js                                      | JavaScript         |         38 |          1 |          3 |         42 |
+| d:\codes\database\src\router\modules\task.js                                       | JavaScript         |         44 |          0 |          3 |         47 |
+| d:\codes\database\src\settings.js                                                  | JavaScript         |          8 |         22 |          6 |         36 |
+| d:\codes\database\src\store\getters.js                                             | JavaScript         |         63 |          5 |          6 |         74 |
+| d:\codes\database\src\store\index.js                                               | JavaScript         |         16 |          4 |          6 |         26 |
+| d:\codes\database\src\store\modules\app.js                                         | JavaScript         |         52 |          0 |          5 |         57 |
+| d:\codes\database\src\store\modules\errorLog.js                                    | JavaScript         |         25 |          0 |          4 |         29 |
+| d:\codes\database\src\store\modules\health.js                                      | JavaScript         |        459 |         32 |         42 |        533 |
+| d:\codes\database\src\store\modules\permission.js                                  | JavaScript         |         51 |         10 |          9 |         70 |
+| d:\codes\database\src\store\modules\settings.js                                    | JavaScript         |         28 |          1 |          7 |         36 |
+| d:\codes\database\src\store\modules\tagsView.js                                    | JavaScript         |        147 |          2 |         12 |        161 |
+| d:\codes\database\src\store\modules\task.js                                        | JavaScript         |        376 |         32 |         60 |        468 |
+| d:\codes\database\src\store\modules\user.js                                        | JavaScript         |        112 |         11 |         17 |        140 |
+| d:\codes\database\src\styles\btn.scss                                              | SCSS               |         83 |          0 |         17 |        100 |
+| d:\codes\database\src\styles\element-ui.scss                                       | SCSS               |         64 |          6 |         15 |         85 |
+| d:\codes\database\src\styles\element-variables.scss                                | SCSS               |         13 |         10 |          9 |         32 |
+| d:\codes\database\src\styles\index.scss                                            | SCSS               |        154 |          2 |         36 |        192 |
+| d:\codes\database\src\styles\mixin.scss                                            | SCSS               |         56 |          0 |         11 |         67 |
+| d:\codes\database\src\styles\sidebar.scss                                          | SCSS               |        180 |          6 |         41 |        227 |
+| d:\codes\database\src\styles\transition.scss                                       | SCSS               |         35 |          4 |         10 |         49 |
+| d:\codes\database\src\styles\variables.scss                                        | SCSS               |         26 |          4 |          6 |         36 |
+| d:\codes\database\src\utils\auth.js                                                | JavaScript         |         11 |          0 |          5 |         16 |
+| d:\codes\database\src\utils\clipboard.js                                           | JavaScript         |         29 |          0 |          4 |         33 |
+| d:\codes\database\src\utils\error-log.js                                           | JavaScript         |         28 |          4 |          4 |         36 |
+| d:\codes\database\src\utils\get-page-title.js                                      | JavaScript         |          8 |          0 |          3 |         11 |
+| d:\codes\database\src\utils\index.js                                               | JavaScript         |        234 |         98 |         26 |        358 |
+| d:\codes\database\src\utils\open-window.js                                         | JavaScript         |         12 |          9 |          5 |         26 |
+| d:\codes\database\src\utils\permission.js                                          | JavaScript         |         14 |          5 |          3 |         22 |
+| d:\codes\database\src\utils\request.js                                             | JavaScript         |         47 |         21 |          8 |         76 |
+| d:\codes\database\src\utils\scroll-to.js                                           | JavaScript         |         39 |         15 |          5 |         59 |
+| d:\codes\database\src\utils\validate.js                                            | JavaScript         |         39 |         39 |         10 |         88 |
+| d:\codes\database\src\vendor\Export2Excel.js                                       | JavaScript         |        180 |         15 |         26 |        221 |
+| d:\codes\database\src\vendor\Export2Zip.js                                         | JavaScript         |         22 |          1 |          2 |         25 |
+| d:\codes\database\src\views\dashboard\life-overview\components\TodoList\index.scss | SCSS               |        309 |         11 |          1 |        321 |
+| d:\codes\database\src\views\dashboard\life-overview\components\mixins\resize.js    | JavaScript         |         50 |          4 |          2 |         56 |
+| d:\codes\database\src\views\finance\utils.js                                       | JavaScript         |         25 |          3 |          3 |         31 |
+| d:\codes\database\src\views\guide\steps.js                                         | JavaScript         |         44 |          0 |          2 |         46 |
+| d:\codes\database\tests\unit\.eslintrc.js                                          | JavaScript         |          5 |          0 |          1 |          6 |
+| d:\codes\database\tests\unit\components\Hamburger.spec.js                          | JavaScript         |         18 |          0 |          1 |         19 |
+| d:\codes\database\tests\unit\components\SvgIcon.spec.js                            | JavaScript         |         22 |          0 |          1 |         23 |
+| d:\codes\database\tests\unit\utils\formatTime.spec.js                              | JavaScript         |         28 |          0 |          2 |         30 |
+| d:\codes\database\tests\unit\utils\param2Obj.spec.js                               | JavaScript         |         13 |          0 |          2 |         15 |
+| d:\codes\database\tests\unit\utils\parseTime.spec.js                               | JavaScript         |         33 |          0 |          5 |         38 |
+| d:\codes\database\tests\unit\utils\validate.spec.js                                | JavaScript         |         28 |          0 |          1 |         29 |
+| d:\codes\database\vue.config.js                                                    | JavaScript         |         94 |         23 |          8 |        125 |
+| Total                                                                              |                    |      9,603 |        909 |      1,460 |     11,972 |
++------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+

@@ -4,7 +4,7 @@ import { listTasks, createTask, updateTask as updateTaskApi, deleteTask as delet
 const state = {
   // 待办事项
   todos: JSON.parse(localStorage.getItem('todos')) || [
-    { id: 1, text: '开始使用个人生活管理助手', done: false, priority: 'high', category: 1, project: null, dueDate: null, createdAt: new Date().toISOString() },
+    { id: 1, text: '开始使用军校学员个人生活助手', done: false, priority: 'high', category: 1, project: null, dueDate: null, createdAt: new Date().toISOString() },
     { id: 2, text: '添加第一个待办事项', done: false, priority: 'medium', category: 1, project: null, dueDate: null, createdAt: new Date().toISOString() },
     { id: 3, text: '设置个人目标', done: false, priority: 'medium', category: 1, project: null, dueDate: null, createdAt: new Date().toISOString() },
     { id: 4, text: '查看仪表板', done: true, priority: 'low', category: 1, project: null, dueDate: null, createdAt: new Date().toISOString() },

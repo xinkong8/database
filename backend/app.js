@@ -7,8 +7,40 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // 中间件配置
+const whitelist = [
+  'http://localhost:9527',
+  'http://127.0.0.1:9527',
+  'http://localhost:8080',
+  'http://127.0.0.1:8080',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'http://192.168.129.185:9527'
+];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:8080',
+  origin(origin, callback) {
+    // 允许没有origin的请求（比如移动应用、Postman等）
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+    
+    // 开发环境允许localhost和127.0.0.1的所有端口
+    if (process.env.NODE_ENV === 'development') {
+      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+        callback(null, true);
+        return;
+      }
+    }
+    
+    // 检查白名单
+    if (whitelist.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 
@@ -21,7 +53,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // 基础路由
 app.get('/', (req, res) => {
   res.json({
-    message: '个人生活管理助手API服务',
+    message: '军校学员个人生活助手API服务',
     version: '1.0.0',
     status: 'running',
     time: new Date().toISOString()
